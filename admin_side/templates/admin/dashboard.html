@@ -1,0 +1,190 @@
+{% extends "admin/custom_base.html" %}
+{% load tz %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Overview Dashboard{% endblock %}
+
+{% block content %}
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-content">
+            <span class="stat-label">Total Institutions</span>
+            <span class="stat-value">{{ total_institutions|default:"0" }}</span>
+        </div>
+        <div class="stat-icon blue">
+            <i class="fas fa-building"></i>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-content">
+            <span class="stat-label">Total Coordinators</span>
+            <span class="stat-value">{{ total_coordinators|default:"0" }}</span>
+        </div>
+        <div class="stat-icon orange">
+            <i class="fas fa-user-tie"></i>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-content">
+            <span class="stat-label">Total Courses</span>
+            <span class="stat-value">{{ total_courses|default:"0" }}</span>
+        </div>
+        <div class="stat-icon purple">
+            <i class="fas fa-book"></i>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-content">
+            <span class="stat-label">Active Internships</span>
+            <span class="stat-value">{{ active_internships|default:"0" }}</span>
+        </div>
+        <div class="stat-icon green">
+            <i class="fas fa-briefcase"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity & CTA Section -->
+<div class="grid-2 mb-6">
+    <!-- Recent Activity Table -->
+    <div class="card" style="grid-column: span 2;">
+        <div class="card-header">
+            <h3 class="card-title">Recent Activity</h3>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Entity Name</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if recent_activities %}
+                            {% for activity in recent_activities %}
+                            <tr>
+                                <td>
+                                    <span class="text-muted">
+                                        {{ activity.date|date:"M d, Y" }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex items-center gap-3">
+                                        <div class="stat-icon 
+                                            {% if activity.type == 'Institution' %}blue
+                                            {% elif activity.type == 'Coordinator' %}orange
+                                            {% elif activity.type == 'Course' %}purple
+                                            {% else %}green{% endif %}" 
+                                             style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                            <i class="fas fa-{{ activity.icon }}"></i>
+                                        </div>
+                                        <span class="font-semibold">{{ activity.name }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge 
+                                        {% if activity.type == 'Institution' %}badge-info
+                                        {% elif activity.type == 'Coordinator' %}badge-warning
+                                        {% elif activity.type == 'Course' %}badge-purple
+                                        {% else %}badge-success{% endif %}">
+                                        {{ activity.type }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge {% if activity.status == 'Active' %}badge-success{% else %}badge-error{% endif %}">
+                                        {{ activity.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ activity.url }}" class="btn btn-secondary btn-sm">
+                                        <i class="fas fa-eye"></i>
+                                        View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5">
+                                    <div class="empty-state py-8">
+                                        <div class="empty-state-icon">
+                                            <i class="fas fa-clock"></i>
+                                        </div>
+                                        <h3>No Recent Activity</h3>
+                                        <p>Start by adding institutions, coordinators, courses, or internships</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CTA and Quick Stats Section -->
+<div class="grid-2">
+    <!-- CTA Card -->
+    <div class="cta-card">
+        <h3>Need to add a new institution?</h3>
+        <p>Instantly set up a new portal for partner universities or vocational training centers.</p>
+        <a href="{% url 'add_institution' %}" class="btn">
+            <i class="fas fa-plus"></i>
+            Register Institution
+        </a>
+    </div>
+    
+    <!-- Quick Stats Card -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Quick Stats</h3>
+        </div>
+        <div class="card-body">
+            <div class="d-flex justify-between items-center mb-4" style="padding-bottom: 12px; border-bottom: 1px solid var(--border-color);">
+                <div class="d-flex items-center gap-3">
+                    <div class="stat-icon blue" style="width: 36px; height: 36px; font-size: 0.85rem;">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <span>Active Institutions</span>
+                </div>
+                <span class="font-semibold" style="font-size: 1.125rem;">{{ active_institutions|default:"0" }}</span>
+            </div>
+            <div class="d-flex justify-between items-center mb-4" style="padding-bottom: 12px; border-bottom: 1px solid var(--border-color);">
+                <div class="d-flex items-center gap-3">
+                    <div class="stat-icon purple" style="width: 36px; height: 36px; font-size: 0.85rem;">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <span>Active Courses</span>
+                </div>
+                <span class="font-semibold" style="font-size: 1.125rem;">{{ active_courses|default:"0" }}</span>
+            </div>
+            <div class="d-flex justify-between items-center mb-4" style="padding-bottom: 12px; border-bottom: 1px solid var(--border-color);">
+                <div class="d-flex items-center gap-3">
+                    <div class="stat-icon green" style="width: 36px; height: 36px; font-size: 0.85rem;">
+                        <i class="fas fa-briefcase"></i>
+                    </div>
+                    <span>Active Internships</span>
+                </div>
+                <span class="font-semibold" style="font-size: 1.125rem;">{{ active_internships|default:"0" }}</span>
+            </div>
+            <div class="d-flex justify-between items-center">
+                <div class="d-flex items-center gap-3">
+                    <div class="stat-icon orange" style="width: 36px; height: 36px; font-size: 0.85rem;">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <span>Total Students</span>
+                </div>
+                <span class="font-semibold" style="font-size: 1.125rem;">{{ total_students|default:"0" }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

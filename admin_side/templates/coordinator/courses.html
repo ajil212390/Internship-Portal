@@ -1,0 +1,77 @@
+{% extends 'coordinator/base.html' %}
+
+{% block title %}My Courses{% endblock %}
+{% block page_title %}My Courses{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-graduation-cap" style="margin-right: 8px;"></i>Courses Assigned to Me</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        {% if courses %}
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Course Name</th>
+                        <th>Institution</th>
+                        <th>Duration</th>
+                        <th>Dates</th>
+                        <th>Enrolled</th>
+                        <th>Pending</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for course in courses %}
+                    <tr>
+                        <td>
+                            <strong>{{ course.name }}</strong>
+                            {% if course.description %}
+                            <div style="font-size: 0.75rem; color: var(--text-muted); max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                {{ course.description|truncatewords:10 }}
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td>{{ course.institution.name }}</td>
+                        <td>{{ course.duration_days }} days</td>
+                        <td>
+                            {% if course.start_date %}
+                                {{ course.start_date|date:"M d" }} - {{ course.end_date|date:"M d, Y"|default:"TBD" }}
+                            {% else %}
+                                <span style="color: var(--text-muted);">Not set</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge badge-success">{{ course.enrolled }}</span>
+                        </td>
+                        <td>
+                            {% if course.pending > 0 %}
+                            <span class="badge badge-warning">{{ course.pending }}</span>
+                            {% else %}
+                            <span class="badge badge-neutral">0</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if course.is_active %}
+                            <span class="badge badge-success">Active</span>
+                            {% else %}
+                            <span class="badge badge-neutral">Inactive</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="padding: var(--space-12); text-align: center;">
+            <i class="fas fa-graduation-cap" style="font-size: 3rem; color: var(--text-muted); margin-bottom: var(--space-4);"></i>
+            <h3 style="margin-bottom: var(--space-2);">No Courses Assigned</h3>
+            <p style="color: var(--text-secondary);">You don't have any courses assigned to you yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

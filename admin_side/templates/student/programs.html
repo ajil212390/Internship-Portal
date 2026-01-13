@@ -1,0 +1,135 @@
+{% extends 'student/base.html' %}
+
+{% block title %}Programs{% endblock %}
+{% block page_title %}Browse Programs{% endblock %}
+
+{% block content %}
+<!-- Search/Filter Section -->
+<div class="card" style="margin-bottom: var(--space-6);">
+    <div class="card-body">
+        <form method="get" style="display: flex; gap: var(--space-4); flex-wrap: wrap; align-items: center;">
+            <input type="text" name="q" value="{{ query }}" placeholder="Search programs..." 
+                   class="form-control" style="flex: 1; min-width: 200px; padding: var(--space-3) var(--space-4); border: 1px solid var(--border-light); border-radius: var(--radius-md);">
+            <input type="text" name="institution" value="{{ institution }}" placeholder="Institution..." 
+                   class="form-control" style="width: 200px; padding: var(--space-3) var(--space-4); border: 1px solid var(--border-light); border-radius: var(--radius-md);">
+            <select name="type" class="form-control" style="width: 150px; padding: var(--space-3) var(--space-4); border: 1px solid var(--border-light); border-radius: var(--radius-md);">
+                <option value="all" {% if program_type == 'all' %}selected{% endif %}>All Types</option>
+                <option value="course" {% if program_type == 'course' %}selected{% endif %}>Courses</option>
+                <option value="internship" {% if program_type == 'internship' %}selected{% endif %}>Internships</option>
+            </select>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search"></i> Search
+            </button>
+            <a href="{% url 'student:programs' %}" class="btn btn-secondary">Clear</a>
+        </form>
+    </div>
+</div>
+
+<!-- Programs Grid -->
+{% if programs %}
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: var(--space-6);">
+    {% for program in programs %}
+    <div class="card" style="transition: transform 0.2s; cursor: pointer;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+        <div class="card-header">
+            <div>
+                <span class="tag" style="margin-bottom: var(--space-2);">{{ program.type|title }}</span>
+                <h3 class="card-title" style="margin-top: var(--space-2);">{{ program.name }}</h3>
+            </div>
+        </div>
+        <div class="card-body">
+            <p style="color: var(--text-secondary); margin-bottom: var(--space-4); min-height: 48px;">
+                {{ program.description|truncatewords:20|default:"No description available." }}
+            </p>
+            <div style="display: flex; flex-direction: column; gap: var(--space-2); color: var(--text-secondary); font-size: 0.875rem;">
+                <div><i class="fas fa-building" style="width: 20px;"></i> {{ program.institution }}</div>
+                <div><i class="fas fa-clock" style="width: 20px;"></i> {{ program.duration }}</div>
+                <div>
+                    <i class="fas fa-users" style="width: 20px;"></i> 
+                    <span class="{% if program.seats_available > 0 %}{% else %}text-error{% endif %}">
+                        {{ program.seats_available }} seats available
+                    </span>
+                </div>
+                {% if program.start_date %}
+                <div><i class="fas fa-calendar" style="width: 20px;"></i> Starts: {{ program.start_date|date:"M d, Y" }}</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card-footer" style="display: flex; justify-content: flex-end; gap: var(--space-3);">
+            <a href="{% url 'student:program_detail' program.id %}?type={{ program.type }}" class="btn btn-primary">
+                <i class="fas fa-eye"></i> View Details
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<!-- Fallback for courses/internships separate display -->
+{% if courses or internships %}
+    {% if courses %}
+    <h3 style="margin-bottom: var(--space-4);"><i class="fas fa-graduation-cap" style="margin-right: 8px;"></i>Courses</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: var(--space-6); margin-bottom: var(--space-8);">
+        {% for course in courses %}
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <span class="tag">Course</span>
+                    <h3 class="card-title" style="margin-top: var(--space-2);">{{ course.name }}</h3>
+                </div>
+            </div>
+            <div class="card-body">
+                <p style="color: var(--text-secondary); margin-bottom: var(--space-4);">
+                    {{ course.description|truncatewords:20|default:"No description available." }}
+                </p>
+                <div style="display: flex; flex-direction: column; gap: var(--space-2); color: var(--text-secondary); font-size: 0.875rem;">
+                    <div><i class="fas fa-building" style="width: 20px;"></i> {{ course.institution.name }}</div>
+                    <div><i class="fas fa-clock" style="width: 20px;"></i> {{ course.duration_days }} days</div>
+                    <div><i class="fas fa-users" style="width: 20px;"></i> {{ course.available_seats }} seats</div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'student:program_detail' course.id %}?type=course" class="btn btn-primary">View Details</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    {% if internships %}
+    <h3 style="margin-bottom: var(--space-4);"><i class="fas fa-briefcase" style="margin-right: 8px;"></i>Internships</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: var(--space-6);">
+        {% for internship in internships %}
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <span class="tag">Internship</span>
+                    <h3 class="card-title" style="margin-top: var(--space-2);">{{ internship.title }}</h3>
+                </div>
+            </div>
+            <div class="card-body">
+                <p style="color: var(--text-secondary); margin-bottom: var(--space-4);">
+                    {{ internship.description|truncatewords:20|default:"No description available." }}
+                </p>
+                <div style="display: flex; flex-direction: column; gap: var(--space-2); color: var(--text-secondary); font-size: 0.875rem;">
+                    <div><i class="fas fa-building" style="width: 20px;"></i> {{ internship.institution.name }}</div>
+                    <div><i class="fas fa-clock" style="width: 20px;"></i> {{ internship.duration }} days</div>
+                    <div><i class="fas fa-users" style="width: 20px;"></i> {{ internship.available_seats }} seats</div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'student:program_detail' internship.id %}?type=internship" class="btn btn-primary">View Details</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+{% else %}
+<div class="card">
+    <div class="card-body" style="text-align: center; padding: var(--space-12);">
+        <i class="fas fa-search" style="font-size: 3rem; color: var(--text-muted); margin-bottom: var(--space-4);"></i>
+        <h3 style="margin-bottom: var(--space-2);">No programs found</h3>
+        <p style="color: var(--text-secondary);">Try adjusting your search criteria</p>
+    </div>
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}

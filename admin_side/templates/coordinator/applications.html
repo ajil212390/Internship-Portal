@@ -1,0 +1,111 @@
+{% extends 'coordinator/base.html' %}
+
+{% block title %}Applications{% endblock %}
+{% block page_title %}Applications Management{% endblock %}
+
+{% block content %}
+<!-- Filter Section -->
+<div class="card" style="margin-bottom: var(--space-6);">
+    <div class="card-body">
+        <form method="get" style="display: flex; gap: var(--space-4); align-items: center; flex-wrap: wrap;">
+            <label style="font-weight: 500;">Filters:</label>
+            <select name="status" class="form-control" style="width: 150px; padding: var(--space-3) var(--space-4); border: 1px solid var(--border-light); border-radius: var(--radius-md);">
+                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Status</option>
+                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+                <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+            </select>
+            <select name="program" class="form-control" style="width: 150px; padding: var(--space-3) var(--space-4); border: 1px solid var(--border-light); border-radius: var(--radius-md);">
+                <option value="all" {% if program_filter == 'all' %}selected{% endif %}>All Programs</option>
+                <option value="course" {% if program_filter == 'course' %}selected{% endif %}>Courses</option>
+                <option value="internship" {% if program_filter == 'internship' %}selected{% endif %}>Internships</option>
+            </select>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-filter"></i> Apply Filters
+            </button>
+            <a href="{% url 'coordinator:applications' %}" class="btn btn-secondary">Clear</a>
+        </form>
+    </div>
+</div>
+
+<!-- Applications Table -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-file-alt" style="margin-right: 8px;"></i>Applications ({{ applications|length }})</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        {% if applications %}
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Program</th>
+                        <th>Type</th>
+                        <th>Applied</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in applications %}
+                    <tr>
+                        <td>
+                            <strong>{{ app.student.get_full_name|default:app.student.username }}</strong>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ app.student.email }}</div>
+                        </td>
+                        <td>{{ app.program_name }}</td>
+                        <td><span class="tag">{{ app.program_type }}</span></td>
+                        <td>{{ app.applied_at|date:"M d, Y" }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if app.status == 'APPROVED' %}badge-success
+                                {% elif app.status == 'PENDING' %}badge-warning
+                                {% elif app.status == 'REJECTED' %}badge-error
+                                {% else %}badge-neutral{% endif %}">
+                                {{ app.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if app.status == 'PENDING' %}
+                            <div style="display: flex; gap: var(--space-2);">
+                                <form method="post" action="{% url 'coordinator:approve_application' app.id %}" style="margin: 0;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success btn-sm" title="Approve">
+                                        <i class="fas fa-check"></i> Approve
+                                    </button>
+                                </form>
+                                <form method="post" action="{% url 'coordinator:reject_application' app.id %}" style="margin: 0;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Reject">
+                                        <i class="fas fa-times"></i> Reject
+                                    </button>
+                                </form>
+                            </div>
+                            {% else %}
+                            <span style="color: var(--text-muted); font-size: 0.875rem;">
+                                Reviewed {{ app.reviewed_at|date:"M d"|default:"-" }}
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="padding: var(--space-12); text-align: center;">
+            <i class="fas fa-inbox" style="font-size: 3rem; color: var(--text-muted); margin-bottom: var(--space-4);"></i>
+            <h3 style="margin-bottom: var(--space-2);">No Applications Found</h3>
+            <p style="color: var(--text-secondary);">
+                {% if status_filter != 'all' or program_filter != 'all' %}
+                    No applications match your filters.
+                {% else %}
+                    No applications for your programs yet.
+                {% endif %}
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

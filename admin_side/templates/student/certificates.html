@@ -1,0 +1,126 @@
+{% extends 'student/base.html' %}
+
+{% block title %}My Certificates{% endblock %}
+{% block page_title %}Certificates{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-certificate" style="margin-right: 8px;"></i>My Certificates</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <!-- Eligibility Status -->
+        <div style="padding: var(--space-6); border-bottom: 1px solid var(--border-color);">
+            <h4 style="margin-bottom: var(--space-4);">Eligibility Status</h4>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Program</th>
+                            <th>Attendance %</th>
+                            <th>Status</th>
+                            <th>Certificate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if eligible_for_certificate %}
+                            {% for item in eligible_for_certificate %}
+                            <tr>
+                                <td>
+                                    <strong>{{ item.program_name }}</strong>
+                                </td>
+                                <td>
+                                    <span style="font-weight: 600; color: {% if item.attendance_percentage >= 75 %}var(--success){% else %}var(--warning){% endif %};">
+                                        {{ item.attendance_percentage }}%
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if item.is_eligible %}
+                                        <span class="badge badge-success">Eligible</span>
+                                    {% else %}
+                                        <span class="badge badge-warning">Not Eligible (< 75%)</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.has_certificate %}
+                                        <span class="badge badge-info">{{ item.certificate_status }}</span>
+                                    {% else %}
+                                        <span class="text-muted">Not Generated</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center">No enrolled programs found.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div style="padding: var(--space-6);">
+            <h4 style="margin-bottom: var(--space-4);">Issued Certificates</h4>
+            {% if certificates %}
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Program</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Issued Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cert in certificates %}
+                        <tr>
+                            <td>
+                                <strong>{{ cert.application.program_name }}</strong>
+                            </td>
+                            <td>
+                                <span class="tag">{{ cert.application.program_type }}</span>
+                            </td>
+                            <td>
+                                <span class="badge 
+                                    {% if cert.status == 'ISSUED' %}badge-success
+                                    {% elif cert.status == 'APPROVED' %}badge-info
+                                    {% elif cert.status == 'PENDING' %}badge-warning
+                                    {% else %}badge-error{% endif %}">
+                                    {{ cert.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if cert.issued_date %}
+                                    {{ cert.issued_date|date:"M d, Y" }}
+                                {% else %}
+                                    <span style="color: var(--text-muted);">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if cert.can_download %}
+                                <a href="{% url 'student:download_certificate' cert.id %}" class="btn btn-success btn-sm">
+                                    <i class="fas fa-download"></i> Download
+                                </a>
+                                {% else %}
+                                <span style="color: var(--text-muted); font-size: 0.875rem;">
+                                    {% if cert.status == 'PENDING' %}Awaiting approval{% elif cert.status == 'APPROVED' %}Ready for issue{% else %}Not available{% endif %}
+                                </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p style="color: var(--text-muted); text-align: center; padding: var(--space-4);">
+                No certificates have been issued yet.
+            </p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

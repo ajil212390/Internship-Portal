@@ -1,0 +1,224 @@
+{% extends 'coordinator/base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Coordinator Dashboard{% endblock %}
+
+{% block content %}
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-content">
+            <span class="stat-label">Total Courses</span>
+            <span class="stat-value">{{ total_courses }}</span>
+        </div>
+        <div class="stat-icon blue">
+            <i class="fas fa-graduation-cap"></i>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-content">
+            <span class="stat-label">Total Internships</span>
+            <span class="stat-value">{{ total_internships }}</span>
+        </div>
+        <div class="stat-icon purple">
+            <i class="fas fa-briefcase"></i>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-content">
+            <span class="stat-label">Enrolled Students</span>
+            <span class="stat-value">{{ enrolled_students }}</span>
+        </div>
+        <div class="stat-icon green">
+            <i class="fas fa-users"></i>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-content">
+            <span class="stat-label">Pending Applications</span>
+            <span class="stat-value">{{ pending_applications }}</span>
+        </div>
+        <div class="stat-icon orange">
+            <i class="fas fa-clock"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card" style="margin-bottom: var(--space-6);">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-bolt" style="margin-right: 8px;"></i>Quick Actions</h3>
+    </div>
+    <div class="card-body">
+        <div style="display: flex; gap: var(--space-4); flex-wrap: wrap;">
+            <a href="{% url 'coordinator:applications' %}?status=pending" class="btn btn-primary">
+                <i class="fas fa-file-alt"></i> Review Applications ({{ pending_applications }})
+            </a>
+            <a href="{% url 'coordinator:mark_attendance' %}" class="btn btn-success">
+                <i class="fas fa-calendar-check"></i> Mark Attendance
+            </a>
+            <a href="{% url 'coordinator:certificates' %}" class="btn btn-warning">
+                <i class="fas fa-certificate"></i> Manage Certificates
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Two Column Layout -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6);">
+    <!-- My Courses -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-graduation-cap" style="margin-right: 8px;"></i>My Courses</h3>
+            <a href="{% url 'coordinator:courses' %}" class="btn btn-secondary btn-sm">View All</a>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            {% if courses %}
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Course</th>
+                            <th>Institution</th>
+                            <th>Students</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for course in courses %}
+                        <tr>
+                            <td><strong>{{ course.name }}</strong></td>
+                            <td>{{ course.institution.name }}</td>
+                            <td>
+                                <span class="badge badge-info">{{ course.enrolled_count }}</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="padding: var(--space-8); text-align: center; color: var(--text-muted);">
+                <i class="fas fa-book" style="font-size: 2rem; margin-bottom: var(--space-4);"></i>
+                <p>No courses assigned.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- My Internships -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-briefcase" style="margin-right: 8px;"></i>My Internships</h3>
+            <a href="{% url 'coordinator:internships' %}" class="btn btn-secondary btn-sm">View All</a>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            {% if internships %}
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Internship</th>
+                            <th>Institution</th>
+                            <th>Students</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for internship in internships %}
+                        <tr>
+                            <td><strong>{{ internship.title }}</strong></td>
+                            <td>{{ internship.institution.name }}</td>
+                            <td>
+                                <span class="badge badge-info">{{ internship.enrolled_count }}</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="padding: var(--space-8); text-align: center; color: var(--text-muted);">
+                <i class="fas fa-briefcase" style="font-size: 2rem; margin-bottom: var(--space-4);"></i>
+                <p>No internships assigned.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Recent Applications -->
+<div class="card" style="margin-top: var(--space-6);">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-history" style="margin-right: 8px;"></i>Recent Applications</h3>
+        <a href="{% url 'coordinator:applications' %}" class="btn btn-secondary btn-sm">View All</a>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        {% if recent_applications %}
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Program</th>
+                        <th>Applied</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in recent_applications %}
+                    <tr>
+                        <td>
+                            <strong>{{ app.student.get_full_name|default:app.student.username }}</strong>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ app.student.email }}</div>
+                        </td>
+                        <td>
+                            {{ app.program_name }}
+                            <span class="tag" style="margin-left: 8px;">{{ app.program_type }}</span>
+                        </td>
+                        <td>{{ app.applied_at|date:"M d" }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if app.status == 'APPROVED' %}badge-success
+                                {% elif app.status == 'PENDING' %}badge-warning
+                                {% elif app.status == 'REJECTED' %}badge-error
+                                {% else %}badge-neutral{% endif %}">
+                                {{ app.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if app.status == 'PENDING' %}
+                            <div style="display: flex; gap: var(--space-2);">
+                                <form method="post" action="{% url 'coordinator:approve_application' app.id %}" style="margin: 0;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success btn-sm" title="Approve">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </form>
+                                <form method="post" action="{% url 'coordinator:reject_application' app.id %}" style="margin: 0;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Reject">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </form>
+                            </div>
+                            {% else %}
+                            <span style="color: var(--text-muted);">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="padding: var(--space-8); text-align: center; color: var(--text-muted);">
+            <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: var(--space-4);"></i>
+            <p>No applications yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

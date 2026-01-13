@@ -1,0 +1,115 @@
+{% extends 'student/base.html' %}
+
+{% block title %}My Attendance{% endblock %}
+{% block page_title %}Attendance Records{% endblock %}
+
+{% block content %}
+{% if attendance_data %}
+    {% for item in attendance_data %}
+    <div class="card" style="margin-bottom: var(--space-6);">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title">{{ item.application.program_name }}</h3>
+                <span class="tag" style="margin-top: var(--space-2);">{{ item.application.program_type }}</span>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 2rem; font-weight: 700; color: {% if item.percentage >= 75 %}var(--success){% elif item.percentage >= 50 %}var(--warning){% else %}var(--error){% endif %};">
+                    {{ item.percentage }}%
+                </div>
+                <div style="font-size: 0.875rem; color: var(--text-secondary);">Attendance Rate</div>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- Stats Row -->
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); margin-bottom: var(--space-4);">
+                <div style="text-align: center; padding: var(--space-4); background: var(--bg-secondary); border-radius: var(--radius-md);">
+                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">{{ item.total }}</div>
+                    <div style="font-size: 0.875rem; color: var(--text-secondary);">Total Sessions</div>
+                </div>
+                <div style="text-align: center; padding: var(--space-4); background: var(--success-light); border-radius: var(--radius-md);">
+                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--success-dark);">{{ item.present }}</div>
+                    <div style="font-size: 0.875rem; color: var(--success-dark);">Present</div>
+                </div>
+                <div style="text-align: center; padding: var(--space-4); background: var(--warning-light); border-radius: var(--radius-md);">
+                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--warning-dark);">{{ item.late }}</div>
+                    <div style="font-size: 0.875rem; color: var(--warning-dark);">Late</div>
+                </div>
+                <div style="text-align: center; padding: var(--space-4); background: var(--error-light); border-radius: var(--radius-md);">
+                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--error-dark);">{{ item.absent }}</div>
+                    <div style="font-size: 0.875rem; color: var(--error-dark);">Absent</div>
+                </div>
+            </div>
+
+            <!-- Eligibility Alert -->
+            <div style="margin-bottom: var(--space-6);">
+                {% if item.eligible_for_certificate %}
+                <div class="alert alert-success" style="background: var(--success-light); color: var(--success-dark); padding: var(--space-3); border-radius: var(--radius-sm); border: 1px solid var(--success);">
+                    <i class="fas fa-check-circle"></i> Good job! You are eligible for a certificate (Attendance ≥ 75%).
+                </div>
+                {% else %}
+                <div class="alert alert-warning" style="background: var(--warning-light); color: var(--warning-dark); padding: var(--space-3); border-radius: var(--radius-sm); border: 1px solid var(--warning);">
+                    <i class="fas fa-exclamation-circle"></i> You need at least 75% attendance to be eligible for a certificate.
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Attendance Records Table -->
+            {% if item.records %}
+            <h4 style="margin-bottom: var(--space-4);">Recent Records</h4>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Session</th>
+                            <th>Status</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in item.records %}
+                        <tr>
+                            <td>{{ record.date|date:"M d, Y" }}</td>
+                            <td>
+                                {% if record.session == 'MORNING' %}
+                                    <span style="color: var(--warning);"><i class="fas fa-sun"></i> Morning</span>
+                                {% else %}
+                                    <span style="color: var(--primary);"><i class="fas fa-moon"></i> Evening</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge 
+                                    {% if record.status == 'PRESENT' %}badge-success
+                                    {% elif record.status == 'LATE' %}badge-warning
+                                    {% elif record.status == 'ABSENT' %}badge-error
+                                    {% else %}badge-info{% endif %}">
+                                    {{ record.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ record.remarks|default:"-" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p style="color: var(--text-muted); text-align: center;">No attendance records yet.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+<div class="card">
+    <div class="card-body" style="text-align: center; padding: var(--space-12);">
+        <i class="fas fa-calendar-times" style="font-size: 3rem; color: var(--text-muted); margin-bottom: var(--space-4);"></i>
+        <h3 style="margin-bottom: var(--space-2);">No Attendance Records</h3>
+        <p style="color: var(--text-secondary); margin-bottom: var(--space-6);">
+            You need to be enrolled in a program to view attendance records.
+        </p>
+        <a href="{% url 'student:programs' %}" class="btn btn-primary">
+            <i class="fas fa-search"></i> Browse Programs
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

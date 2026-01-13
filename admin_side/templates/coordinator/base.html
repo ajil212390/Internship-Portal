@@ -1,0 +1,151 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Coordinator Portal{% endblock %} | Smart Internship</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <div class="sidebar-logo-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <div class="sidebar-logo-text">
+                        <h1>Smart Internship</h1>
+                        <span>Coordinator Portal</span>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Menu</div>
+                    <a href="{% url 'coordinator:dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Programs</div>
+                    <a href="{% url 'coordinator:courses' %}" class="nav-item {% if request.resolver_match.url_name == 'courses' %}active{% endif %}">
+                        <i class="fas fa-graduation-cap"></i>
+                        <span>Courses</span>
+                    </a>
+                    <a href="{% url 'coordinator:internships' %}" class="nav-item {% if request.resolver_match.url_name == 'internships' %}active{% endif %}">
+                        <i class="fas fa-briefcase"></i>
+                        <span>Internships</span>
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Management</div>
+                    <a href="{% url 'coordinator:students' %}" class="nav-item {% if request.resolver_match.url_name == 'students' or request.resolver_match.url_name == 'student_detail' %}active{% endif %}">
+                        <i class="fas fa-users"></i>
+                        <span>Students</span>
+                    </a>
+                    <a href="{% url 'coordinator:applications' %}" class="nav-item {% if request.resolver_match.url_name == 'applications' %}active{% endif %}">
+                        <i class="fas fa-file-alt"></i>
+                        <span>Applications</span>
+                    </a>
+                    <a href="{% url 'coordinator:attendance' %}" class="nav-item {% if request.resolver_match.url_name == 'attendance' or request.resolver_match.url_name == 'mark_attendance' %}active{% endif %}">
+                        <i class="fas fa-calendar-check"></i>
+                        <span>Attendance</span>
+                    </a>
+                    <a href="{% url 'coordinator:certificates' %}" class="nav-item {% if request.resolver_match.url_name == 'certificates' %}active{% endif %}">
+                        <i class="fas fa-certificate"></i>
+                        <span>Certificates</span>
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Account</div>
+                    <a href="{% url 'coordinator:profile' %}" class="nav-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                        <i class="fas fa-user"></i>
+                        <span>Profile</span>
+                    </a>
+                </div>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <a href="{% url 'logout' %}" class="nav-item logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <h2 class="page-title">{% block page_title %}Dashboard{% endblock %}</h2>
+                </div>
+                
+                <div class="header-right">
+                    <div class="header-actions">
+                        <button class="header-btn">
+                            <i class="fas fa-bell"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="user-menu">
+                        <div class="user-info">
+                            <div class="user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+                            <div class="user-role">Coordinator</div>
+                        </div>
+                        <div class="user-avatar">
+                            {% if request.user.profile_picture %}
+                                <img src="{{ request.user.profile_picture.url }}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">
+                            {% else %}
+                                {{ request.user.username|slice:":1"|upper }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Page Content -->
+            <div class="page-content">
+                {% if messages %}
+                <div class="messages-container" style="margin-bottom: var(--space-6);">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}" style="padding: var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-3); 
+                        {% if message.tags == 'success' %}background: var(--success-light); color: var(--success-dark);{% endif %}
+                        {% if message.tags == 'error' %}background: var(--error-light); color: var(--error-dark);{% endif %}
+                        {% if message.tags == 'warning' %}background: var(--warning-light); color: var(--warning-dark);{% endif %}
+                        {% if message.tags == 'info' %}background: var(--info-light); color: var(--info-dark);{% endif %}">
+                        <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}" style="margin-right: 8px;"></i>
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

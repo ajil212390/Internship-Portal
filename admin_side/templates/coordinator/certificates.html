@@ -1,0 +1,133 @@
+{% extends 'coordinator/base.html' %}
+
+{% block title %}Certificates{% endblock %}
+{% block page_title %}Certificate Management{% endblock %}
+
+{% block content %}
+<!-- Filter -->
+<div class="card" style="margin-bottom: var(--space-6);">
+    <div class="card-body">
+        <form method="get" style="display: flex; gap: var(--space-4); align-items: center;">
+            <label style="font-weight: 500;">Filter by Status:</label>
+            <select name="status" class="form-control" style="width: 150px; padding: var(--space-3) var(--space-4); border: 1px solid var(--border-light); border-radius: var(--radius-md);" onchange="this.form.submit()">
+                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Status</option>
+                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+                <option value="issued" {% if status_filter == 'issued' %}selected{% endif %}>Issued</option>
+            </select>
+        </form>
+    </div>
+</div>
+
+<!-- Certificates Table -->
+<div class="card" style="margin-bottom: var(--space-6);">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-certificate" style="margin-right: 8px;"></i>Certificates</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        {% if certificates %}
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Program</th>
+                        <th>Status</th>
+                        <th>Issued Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cert in certificates %}
+                    <tr>
+                        <td>
+                            <strong>{{ cert.application.student.get_full_name|default:cert.application.student.username }}</strong>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ cert.application.student.email }}</div>
+                        </td>
+                        <td>
+                            {{ cert.application.program_name }}
+                            <span class="tag" style="margin-left: 8px;">{{ cert.application.program_type }}</span>
+                        </td>
+                        <td>
+                            <span class="badge 
+                                {% if cert.status == 'ISSUED' %}badge-success
+                                {% elif cert.status == 'APPROVED' %}badge-info
+                                {% elif cert.status == 'PENDING' %}badge-warning
+                                {% else %}badge-error{% endif %}">
+                                {{ cert.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ cert.issued_date|date:"M d, Y"|default:"-" }}</td>
+                        <td>
+                            {% if cert.status == 'PENDING' %}
+                            <form method="post" action="{% url 'coordinator:approve_certificate' cert.id %}" style="margin: 0;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="approve">
+                                <button type="submit" class="btn btn-success btn-sm">
+                                    <i class="fas fa-check"></i> Approve
+                                </button>
+                            </form>
+                            {% elif cert.status == 'APPROVED' %}
+                            <form method="post" action="{% url 'coordinator:approve_certificate' cert.id %}" style="margin: 0;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="issue">
+                                <button type="submit" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-file-export"></i> Issue
+                                </button>
+                            </form>
+                            {% else %}
+                            <span style="color: var(--text-muted); font-size: 0.875rem;">Completed</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="padding: var(--space-12); text-align: center;">
+            <i class="fas fa-award" style="font-size: 3rem; color: var(--text-muted); margin-bottom: var(--space-4);"></i>
+            <h3 style="margin-bottom: var(--space-2);">No Certificates</h3>
+            <p style="color: var(--text-secondary);">No certificates to manage at this time.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Eligible for Certificate -->
+{% if apps_without_cert %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-user-check" style="margin-right: 8px;"></i>Eligible for Certificate</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Program</th>
+                        <th>Enrolled Since</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in apps_without_cert %}
+                    <tr>
+                        <td>
+                            <strong>{{ app.student.get_full_name|default:app.student.username }}</strong>
+                        </td>
+                        <td>{{ app.program_name }}</td>
+                        <td>{{ app.applied_at|date:"M d, Y" }}</td>
+                        <td>
+                            <span style="color: var(--text-muted); font-size: 0.875rem;">Certificate not created yet</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends "admin/custom_base.html" %}
+{% block title %}Add Coordinator{% endblock %}
+{% block page_title %}Add New Coordinator{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<div class="d-flex items-center gap-2 mb-6">
+    <a href="{% url 'coordinator_list' %}" class="text-muted" style="font-size: 0.875rem;">
+        <i class="fas fa-chalkboard-teacher"></i> Trainers
+    </a>
+    <i class="fas fa-chevron-right text-muted" style="font-size: 0.75rem;"></i>
+    <span style="font-size: 0.875rem;">Add New</span>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="grid-2">
+        <!-- Account Information Card -->
+        <div class="card mb-6">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-user" style="color: var(--primary-500); margin-right: 8px;"></i>
+                    Account Information
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label" for="username">
+                        Username <span style="color: var(--error);">*</span>
+                    </label>
+                    <input type="text" id="username" name="username" class="form-control" 
+                           placeholder="Enter username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="email">
+                        Email <span style="color: var(--error);">*</span>
+                    </label>
+                    <input type="email" id="email" name="email" class="form-control" 
+                           placeholder="coordinator@example.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="phone">Phone</label>
+                    <input type="tel" id="phone" name="phone" class="form-control" 
+                           placeholder="+91 98765 43210">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="password">
+                        Password <span style="color: var(--error);">*</span>
+                    </label>
+                    <input type="password" id="password" name="password" class="form-control" 
+                           placeholder="Enter password" required>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Institution Assignment Card -->
+        <div class="card mb-6">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-building" style="color: var(--warning); margin-right: 8px;"></i>
+                    Assign to Institution
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label" for="institution">
+                        Select Institution <span style="color: var(--error);">*</span>
+                    </label>
+                    <select id="institution" name="institution" class="form-control" required>
+                        <option value="">-- Select Institution --</option>
+                        {% for inst in institutions %}
+                            <option value="{{ inst.id }}">{{ inst.name }} ({{ inst.location }})</option>
+                        {% endfor %}
+                    </select>
+                    <p class="form-text">Coordinators can only be assigned to courses/internships from their institution</p>
+                </div>
+                
+                <div class="mt-6" style="background: var(--bg-secondary); padding: 16px; border-radius: var(--radius-md);">
+                    <h4 style="font-size: 0.875rem; margin-bottom: 8px;">
+                        <i class="fas fa-info-circle" style="color: var(--info);"></i>
+                        Important
+                    </h4>
+                    <p class="text-muted" style="font-size: 0.8rem; margin: 0;">
+                        Each coordinator belongs to one institution. They can only be assigned to courses and internships within their institution.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="d-flex gap-4">
+        <button type="submit" class="btn btn-primary btn-lg">
+            <i class="fas fa-save"></i>
+            Save Coordinator
+        </button>
+        <a href="{% url 'coordinator_list' %}" class="btn btn-secondary btn-lg">
+            <i class="fas fa-times"></i>
+            Cancel
+        </a>
+    </div>
+</form>
+{% endblock %}

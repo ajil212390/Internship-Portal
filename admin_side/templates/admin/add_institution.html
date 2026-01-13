@@ -1,0 +1,159 @@
+{% extends "admin/custom_base.html" %}
+{% block title %}Add Institution{% endblock %}
+{% block page_title %}Add New Institution{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<div class="d-flex items-center gap-2 mb-6">
+    <a href="{% url 'institution_list' %}" class="text-muted" style="font-size: 0.875rem;">
+        <i class="fas fa-building"></i> Institutions
+    </a>
+    <i class="fas fa-chevron-right text-muted" style="font-size: 0.75rem;"></i>
+    <span style="font-size: 0.875rem;">Add New</span>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="grid-2">
+        <!-- College Information Card -->
+        <div class="card mb-6">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-building" style="color: var(--primary-500); margin-right: 8px;"></i>
+                    College Information
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label" for="name">
+                        College Name <span style="color: var(--error);">*</span>
+                    </label>
+                    <input type="text" 
+                           id="name" 
+                           name="name" 
+                           class="form-control" 
+                           placeholder="Enter college name" 
+                           required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="location">
+                        Location <span style="color: var(--error);">*</span>
+                    </label>
+                    <input type="text" 
+                           id="location" 
+                           name="location" 
+                           class="form-control" 
+                           placeholder="Enter location (city, state)" 
+                           required>
+                </div>
+                
+                <div class="grid-2" style="gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label" for="email">
+                            College Email
+                        </label>
+                        <input type="email" 
+                               id="email" 
+                               name="email" 
+                               class="form-control" 
+                               placeholder="college@example.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="phone">
+                            College Phone
+                        </label>
+                        <input type="tel" 
+                               id="phone" 
+                               name="phone" 
+                               class="form-control" 
+                               placeholder="+91 98765 43210">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Principal Information Card -->
+        <div class="card mb-6">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-user-tie" style="color: var(--warning); margin-right: 8px;"></i>
+                    Principal Information
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label" for="principal_name">
+                        Principal Name
+                    </label>
+                    <input type="text" 
+                           id="principal_name" 
+                           name="principal_name" 
+                           class="form-control" 
+                           placeholder="Enter principal's full name">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="principal_email">
+                        Principal Email (Direct)
+                    </label>
+                    <input type="email" 
+                           id="principal_email" 
+                           name="principal_email" 
+                           class="form-control" 
+                           placeholder="principal@example.com">
+                    <p class="form-text">Direct email address for the principal</p>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="principal_phone">
+                        Principal Phone
+                    </label>
+                    <input type="tel" 
+                           id="principal_phone" 
+                           name="principal_phone" 
+                           class="form-control" 
+                           placeholder="+91 98765 43210">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Coordinator Assignment Card -->
+    <div class="card mb-6">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-user-plus" style="color: var(--info); margin-right: 8px;"></i>
+                Assign Coordinator
+            </h3>
+        </div>
+        <div class="card-body">
+            <div class="form-group mb-0">
+                <label class="form-label" for="coordinator">
+                    Select Coordinator
+                </label>
+                <select id="coordinator" name="coordinator" class="form-control">
+                    <option value="">-- Select Coordinator (Optional) --</option>
+                    {% for c in coordinators %}
+                        <option value="{{ c.id }}">{{ c.username }} ({{ c.email }})</option>
+                    {% endfor %}
+                </select>
+                <p class="form-text">You can assign a coordinator now or later</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="d-flex gap-4">
+        <button type="submit" class="btn btn-primary btn-lg">
+            <i class="fas fa-save"></i>
+            Save Institution
+        </button>
+        <a href="{% url 'institution_list' %}" class="btn btn-secondary btn-lg">
+            <i class="fas fa-times"></i>
+            Cancel
+        </a>
+    </div>
+</form>
+{% endblock %}

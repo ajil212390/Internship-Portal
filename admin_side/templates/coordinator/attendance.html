@@ -1,0 +1,100 @@
+{% extends 'coordinator/base.html' %}
+
+{% block title %}Attendance{% endblock %}
+{% block page_title %}Attendance Records{% endblock %}
+
+{% block content %}
+<!-- Quick Actions -->
+<div class="card" style="margin-bottom: var(--space-6);">
+    <div class="card-body">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 style="margin-bottom: var(--space-2);">Attendance Management</h3>
+                <p style="color: var(--text-secondary);">View and manage attendance records for your students</p>
+            </div>
+            <a href="{% url 'coordinator:mark_attendance' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Mark Attendance
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filter -->
+<div class="card" style="margin-bottom: var(--space-6);">
+    <div class="card-body">
+        <form method="get" style="display: flex; gap: var(--space-4); align-items: center;">
+            <label style="font-weight: 500;">Filter by Date:</label>
+            <input type="date" name="date" value="{{ date_filter }}" 
+                   class="form-control" style="width: 200px; padding: var(--space-3) var(--space-4); border: 1px solid var(--border-light); border-radius: var(--radius-md);">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search"></i> Filter
+            </button>
+            <a href="{% url 'coordinator:attendance' %}" class="btn btn-secondary">Clear</a>
+        </form>
+    </div>
+</div>
+
+<!-- Attendance Records -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-calendar-check" style="margin-right: 8px;"></i>Attendance Records</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        {% if attendance_records %}
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Student</th>
+                        <th>Program</th>
+                        <th>Status</th>
+                        <th>Check In</th>
+                        <th>Check Out</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in attendance_records %}
+                    <tr>
+                        <td>{{ record.date|date:"M d, Y" }}</td>
+                        <td>
+                            <strong>{{ record.student.get_full_name|default:record.student.username }}</strong>
+                        </td>
+                        <td>{{ record.program_name }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if record.status == 'PRESENT' %}badge-success
+                                {% elif record.status == 'LATE' %}badge-warning
+                                {% elif record.status == 'ABSENT' %}badge-error
+                                {% else %}badge-info{% endif %}">
+                                {{ record.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ record.check_in_time|default:"-" }}</td>
+                        <td>{{ record.check_out_time|default:"-" }}</td>
+                        <td>{{ record.remarks|default:"-" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="padding: var(--space-12); text-align: center;">
+            <i class="fas fa-calendar-times" style="font-size: 3rem; color: var(--text-muted); margin-bottom: var(--space-4);"></i>
+            <h3 style="margin-bottom: var(--space-2);">No Attendance Records</h3>
+            <p style="color: var(--text-secondary); margin-bottom: var(--space-6);">
+                {% if date_filter %}
+                    No records found for the selected date.
+                {% else %}
+                    No attendance has been marked yet.
+                {% endif %}
+            </p>
+            <a href="{% url 'coordinator:mark_attendance' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Mark Attendance
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

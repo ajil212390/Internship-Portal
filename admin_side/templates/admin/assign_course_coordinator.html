@@ -1,0 +1,105 @@
+{% extends "admin/custom_base.html" %}
+{% block title %}Assign Course Coordinator{% endblock %}
+{% block page_title %}Assign Coordinator to Course{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<div class="d-flex items-center gap-2 mb-6">
+    <a href="{% url 'course_list' %}" class="text-muted" style="font-size: 0.875rem;">
+        <i class="fas fa-book"></i> Courses
+    </a>
+    <i class="fas fa-chevron-right text-muted" style="font-size: 0.75rem;"></i>
+    <span style="font-size: 0.875rem;">{{ course.name }}</span>
+    <i class="fas fa-chevron-right text-muted" style="font-size: 0.75rem;"></i>
+    <span style="font-size: 0.875rem;">Assign Coordinator</span>
+</div>
+
+<div class="grid-2">
+    <!-- Form Card -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-user-plus" style="color: var(--primary-500); margin-right: 8px;"></i>
+                Assign Coordinator
+            </h3>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label class="form-label" for="coordinator">
+                        Select Coordinator <span style="color: var(--error);">*</span>
+                    </label>
+                    <select id="coordinator" name="coordinator" class="form-control" required>
+                        <option value="">-- Select a Coordinator --</option>
+                        {% for c in coordinators %}
+                            <option value="{{ c.id }}" {% if course.coordinator_id == c.id %}selected{% endif %}>
+                                {{ c.username }} ({{ c.email }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <p class="form-text">Choose a coordinator to manage this course</p>
+                </div>
+                
+                <div class="d-flex gap-4 mt-6">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-check"></i>
+                        Assign Coordinator
+                    </button>
+                    <a href="{% url 'course_list' %}" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-times"></i>
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Course Info Card -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-book" style="color: var(--success); margin-right: 8px;"></i>
+                Course Details
+            </h3>
+        </div>
+        <div class="card-body">
+            <div class="mb-4">
+                <div class="text-muted mb-1" style="font-size: 0.75rem; text-transform: uppercase;">Course Name</div>
+                <div class="font-semibold" style="font-size: 1.125rem;">{{ course.name }}</div>
+            </div>
+            <div class="mb-4">
+                <div class="text-muted mb-1" style="font-size: 0.75rem; text-transform: uppercase;">Institution</div>
+                <div class="d-flex items-center gap-2">
+                    <i class="fas fa-building text-muted"></i>
+                    {{ course.institution.name }}
+                </div>
+            </div>
+            {% if course.coordinator %}
+            <div class="mb-4">
+                <div class="text-muted mb-2" style="font-size: 0.75rem; text-transform: uppercase;">Current Coordinator</div>
+                <div class="d-flex items-center gap-4">
+                    <div class="user-avatar" style="width: 32px; height: 32px; font-size: 0.75rem;">
+                        {{ course.coordinator.username|slice:":1"|upper }}
+                    </div>
+                    <div>
+                        <div class="font-semibold">{{ course.coordinator.username }}</div>
+                        <div class="text-muted" style="font-size: 0.75rem;">{{ course.coordinator.email }}</div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="mb-4">
+                <div class="text-muted mb-1" style="font-size: 0.75rem; text-transform: uppercase;">Current Coordinator</div>
+                <span class="badge badge-warning">Not Assigned</span>
+            </div>
+            {% endif %}
+            <div>
+                <div class="text-muted mb-1" style="font-size: 0.75rem; text-transform: uppercase;">Status</div>
+                <span class="badge badge-success">Active</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

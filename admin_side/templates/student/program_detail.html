@@ -1,0 +1,144 @@
+{% extends 'student/base.html' %}
+
+{% block title %}{{ program.name|default:program.title }}{% endblock %}
+{% block page_title %}Program Details{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-6);">
+    <!-- Main Content -->
+    <div>
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <span class="tag" style="margin-bottom: var(--space-2);">{{ program_type|title }}</span>
+                    <h2 style="margin-top: var(--space-2);">
+                        {% if program_type == 'course' %}{{ program.name }}{% else %}{{ program.title }}{% endif %}
+                    </h2>
+                </div>
+            </div>
+            <div class="card-body">
+                <h4 style="margin-bottom: var(--space-3);">Description</h4>
+                <p style="color: var(--text-secondary); margin-bottom: var(--space-6); line-height: 1.8;">
+                    {{ program.description|default:"No description available." }}
+                </p>
+                
+                {% if program_type == 'course' and program.eligibility %}
+                <h4 style="margin-bottom: var(--space-3);">Eligibility</h4>
+                <p style="color: var(--text-secondary); margin-bottom: var(--space-6); line-height: 1.8;">
+                    {{ program.eligibility }}
+                </p>
+                {% endif %}
+                
+                {% if program_type == 'internship' %}
+                    {% if program.requirements %}
+                    <h4 style="margin-bottom: var(--space-3);">Requirements</h4>
+                    <p style="color: var(--text-secondary); margin-bottom: var(--space-6); line-height: 1.8;">
+                        {{ program.requirements }}
+                    </p>
+                    {% endif %}
+                    
+                    {% if program.skills_gained %}
+                    <h4 style="margin-bottom: var(--space-3);">Skills You'll Gain</h4>
+                    <p style="color: var(--text-secondary); margin-bottom: var(--space-6); line-height: 1.8;">
+                        {{ program.skills_gained }}
+                    </p>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar -->
+    <div>
+        <!-- Program Info Card -->
+        <div class="card" style="margin-bottom: var(--space-6);">
+            <div class="card-header">
+                <h3 class="card-title">Program Information</h3>
+            </div>
+            <div class="card-body">
+                <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+                    <div style="display: flex; justify-content: space-between; padding-bottom: var(--space-3); border-bottom: 1px solid var(--border-light);">
+                        <span style="color: var(--text-secondary);"><i class="fas fa-building" style="width: 20px;"></i> Institution</span>
+                        <strong>{{ program.institution.name }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding-bottom: var(--space-3); border-bottom: 1px solid var(--border-light);">
+                        <span style="color: var(--text-secondary);"><i class="fas fa-clock" style="width: 20px;"></i> Duration</span>
+                        <strong>{% if program_type == 'course' %}{{ program.duration_days }}{% else %}{{ program.duration }}{% endif %} days</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding-bottom: var(--space-3); border-bottom: 1px solid var(--border-light);">
+                        <span style="color: var(--text-secondary);"><i class="fas fa-users" style="width: 20px;"></i> Max Students</span>
+                        <strong>{{ program.max_students }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding-bottom: var(--space-3); border-bottom: 1px solid var(--border-light);">
+                        <span style="color: var(--text-secondary);"><i class="fas fa-chair" style="width: 20px;"></i> Available Seats</span>
+                        <span class="badge {% if program.available_seats > 0 %}badge-success{% else %}badge-error{% endif %}">
+                            {{ program.available_seats }}
+                        </span>
+                    </div>
+                    {% if program.start_date %}
+                    <div style="display: flex; justify-content: space-between; padding-bottom: var(--space-3); border-bottom: 1px solid var(--border-light);">
+                        <span style="color: var(--text-secondary);"><i class="fas fa-calendar" style="width: 20px;"></i> Start Date</span>
+                        <strong>{{ program.start_date|date:"M d, Y" }}</strong>
+                    </div>
+                    {% endif %}
+                    {% if program.end_date %}
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-secondary);"><i class="fas fa-calendar-check" style="width: 20px;"></i> End Date</span>
+                        <strong>{{ program.end_date|date:"M d, Y" }}</strong>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Apply Card -->
+        <div class="card">
+            <div class="card-body">
+                {% if existing_application %}
+                    <div style="text-align: center; padding: var(--space-4);">
+                        <i class="fas fa-check-circle" style="font-size: 2rem; color: var(--success); margin-bottom: var(--space-3);"></i>
+                        <h4 style="margin-bottom: var(--space-2);">Already Applied</h4>
+                        <p style="color: var(--text-secondary); margin-bottom: var(--space-4);">
+                            Status: <span class="badge 
+                                {% if existing_application.status == 'APPROVED' %}badge-success
+                                {% elif existing_application.status == 'PENDING' %}badge-warning
+                                {% elif existing_application.status == 'REJECTED' %}badge-error
+                                {% else %}badge-neutral{% endif %}">
+                                {{ existing_application.get_status_display }}
+                            </span>
+                        </p>
+                        <a href="{% url 'student:applications' %}" class="btn btn-secondary">
+                            <i class="fas fa-eye"></i> View Applications
+                        </a>
+                    </div>
+                {% else %}
+                    {% if program.available_seats > 0 %}
+                    <form method="post" action="{% url 'student:apply' program_type program.id %}">
+                        {% csrf_token %}
+                        <div style="margin-bottom: var(--space-4);">
+                            <label style="display: block; margin-bottom: var(--space-2); font-weight: 500;">Remarks (Optional)</label>
+                            <textarea name="remarks" rows="3" class="form-control" style="width: 100%; padding: var(--space-3); border: 1px solid var(--border-light); border-radius: var(--radius-md); resize: vertical;" placeholder="Any additional information..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">
+                            <i class="fas fa-paper-plane"></i> Apply Now
+                        </button>
+                    </form>
+                    {% else %}
+                    <div style="text-align: center; padding: var(--space-4);">
+                        <i class="fas fa-times-circle" style="font-size: 2rem; color: var(--error); margin-bottom: var(--space-3);"></i>
+                        <h4 style="margin-bottom: var(--space-2);">No Seats Available</h4>
+                        <p style="color: var(--text-secondary);">This program is currently full.</p>
+                    </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div style="margin-top: var(--space-6);">
+    <a href="{% url 'student:programs' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Programs
+    </a>
+</div>
+{% endblock %}

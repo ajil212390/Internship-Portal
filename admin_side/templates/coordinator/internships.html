@@ -1,0 +1,77 @@
+{% extends 'coordinator/base.html' %}
+
+{% block title %}My Internships{% endblock %}
+{% block page_title %}My Internships{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-briefcase" style="margin-right: 8px;"></i>Internships Assigned to Me</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        {% if internships %}
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Internship Title</th>
+                        <th>Institution</th>
+                        <th>Duration</th>
+                        <th>Dates</th>
+                        <th>Enrolled</th>
+                        <th>Pending</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for internship in internships %}
+                    <tr>
+                        <td>
+                            <strong>{{ internship.title }}</strong>
+                            {% if internship.description %}
+                            <div style="font-size: 0.75rem; color: var(--text-muted); max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                {{ internship.description|truncatewords:10 }}
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td>{{ internship.institution.name }}</td>
+                        <td>{{ internship.duration }} days</td>
+                        <td>
+                            {% if internship.start_date %}
+                                {{ internship.start_date|date:"M d" }} - {{ internship.end_date|date:"M d, Y"|default:"TBD" }}
+                            {% else %}
+                                <span style="color: var(--text-muted);">Not set</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge badge-success">{{ internship.enrolled }}</span>
+                        </td>
+                        <td>
+                            {% if internship.pending > 0 %}
+                            <span class="badge badge-warning">{{ internship.pending }}</span>
+                            {% else %}
+                            <span class="badge badge-neutral">0</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if internship.is_active %}
+                            <span class="badge badge-success">Active</span>
+                            {% else %}
+                            <span class="badge badge-neutral">Inactive</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="padding: var(--space-12); text-align: center;">
+            <i class="fas fa-briefcase" style="font-size: 3rem; color: var(--text-muted); margin-bottom: var(--space-4);"></i>
+            <h3 style="margin-bottom: var(--space-2);">No Internships Assigned</h3>
+            <p style="color: var(--text-secondary);">You don't have any internships assigned to you yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

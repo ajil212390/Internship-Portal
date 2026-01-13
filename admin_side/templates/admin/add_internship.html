@@ -1,0 +1,165 @@
+{% extends "admin/custom_base.html" %}
+{% block title %}Add Internship{% endblock %}
+{% block page_title %}Add New Internship{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<div class="d-flex items-center gap-2 mb-6">
+    <a href="{% url 'internship_list' %}" class="text-muted" style="font-size: 0.875rem;">
+        <i class="fas fa-briefcase"></i> Internships
+    </a>
+    <i class="fas fa-chevron-right text-muted" style="font-size: 0.75rem;"></i>
+    <span style="font-size: 0.875rem;">Add New</span>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="grid-2">
+        <!-- Internship Information Card -->
+        <div class="card mb-6">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-briefcase" style="color: var(--primary-500); margin-right: 8px;"></i>
+                    Internship Information
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label" for="title">
+                        Internship Title <span style="color: var(--error);">*</span>
+                    </label>
+                    <input type="text" id="title" name="title" class="form-control" 
+                           placeholder="Enter internship title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="institution">
+                        Institution <span style="color: var(--error);">*</span>
+                    </label>
+                    <select id="institution" name="institution" class="form-control" required>
+                        <option value="">-- Select Institution --</option>
+                        {% for inst in institutions %}
+                            <option value="{{ inst.id }}">{{ inst.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <p class="form-text">Select institution first to see available coordinators</p>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="description">Description</label>
+                    <textarea id="description" name="description" class="form-control" 
+                              rows="3" placeholder="Enter internship description"></textarea>
+                </div>
+                
+                <div class="grid-2" style="gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label" for="duration">Duration (Days)</label>
+                        <input type="number" id="duration" name="duration" 
+                               class="form-control" value="30" min="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="max_students">Max Students</label>
+                        <input type="number" id="max_students" name="max_students" 
+                               class="form-control" value="20" min="1">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Coordinator & Requirements Card -->
+        <div class="card mb-6">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-user-tie" style="color: var(--warning); margin-right: 8px;"></i>
+                    Coordinator & Requirements
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label" for="coordinator">
+                        Assign Coordinator <span style="color: var(--error);">*</span>
+                    </label>
+                    <select id="coordinator" name="coordinator" class="form-control" disabled required>
+                        <option value="">-- Select Institution First --</option>
+                    </select>
+                    <p class="form-text">Coordinator is required. Select institution first to see available coordinators</p>
+                </div>
+                
+                <div id="noCoordinatorMessage" class="mt-4" style="display: none; background: var(--warning-light); padding: 16px; border-radius: var(--radius-md);">
+                    <h4 style="font-size: 0.875rem; margin-bottom: 8px; color: var(--warning-dark);">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        No Coordinators Available
+                    </h4>
+                    <p class="text-muted" style="font-size: 0.8rem; margin: 0;">
+                        This institution has no coordinators. <a href="{% url 'add_coordinator' %}">Add a coordinator</a> first.
+                    </p>
+                </div>
+                
+                <div class="form-group mt-4">
+                    <label class="form-label" for="requirements">Requirements</label>
+                    <textarea id="requirements" name="requirements" class="form-control" 
+                              rows="2" placeholder="Enter eligibility requirements"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="skills_gained">Skills Gained</label>
+                    <textarea id="skills_gained" name="skills_gained" class="form-control" 
+                              rows="2" placeholder="Skills students will gain"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="d-flex gap-4">
+        <button type="submit" class="btn btn-primary btn-lg">
+            <i class="fas fa-save"></i>
+            Save Internship
+        </button>
+        <a href="{% url 'internship_list' %}" class="btn btn-secondary btn-lg">
+            <i class="fas fa-times"></i>
+            Cancel
+        </a>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const institutionSelect = document.getElementById('institution');
+    const coordinatorSelect = document.getElementById('coordinator');
+    const noCoordinatorMessage = document.getElementById('noCoordinatorMessage');
+    
+    institutionSelect.addEventListener('change', async function() {
+        const institutionId = this.value;
+        
+        if (!institutionId) {
+            coordinatorSelect.innerHTML = '<option value="">-- Select Institution First --</option>';
+            coordinatorSelect.disabled = true;
+            noCoordinatorMessage.style.display = 'none';
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/coordinators/${institutionId}/`);
+            const data = await response.json();
+            
+            if (data.coordinators.length === 0) {
+                coordinatorSelect.innerHTML = '<option value="">-- No Coordinators Available --</option>';
+                coordinatorSelect.disabled = true;
+                noCoordinatorMessage.style.display = 'block';
+            } else {
+                coordinatorSelect.innerHTML = '<option value="">-- Select Coordinator --</option>';
+                data.coordinators.forEach(c => {
+                    coordinatorSelect.innerHTML += `<option value="${c.id}">${c.username} (${c.email})</option>`;
+                });
+                coordinatorSelect.disabled = false;
+                noCoordinatorMessage.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Error fetching coordinators:', error);
+        }
+    });
+</script>
+{% endblock %}

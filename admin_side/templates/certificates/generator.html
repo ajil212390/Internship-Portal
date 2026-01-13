@@ -1,0 +1,180 @@
+{% extends "admin/custom_base.html" %}
+{% block title %}Generate Certificates{% endblock %}
+{% block page_title %}Certificate Generator{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<div class="d-flex items-center gap-2 mb-6">
+    <a href="{% url 'admin_dashboard' %}" class="text-muted" style="font-size: 0.875rem;">
+        <i class="fas fa-th-large"></i> Dashboard
+    </a>
+    <i class="fas fa-chevron-right text-muted" style="font-size: 0.75rem;"></i>
+    <span style="font-size: 0.875rem;">Generate Certificates</span>
+</div>
+
+<div class="grid-2">
+    <!-- Settings Card -->
+    <div class="card mb-6">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-cog" style="color: var(--primary-500); margin-right: 8px;"></i>
+                Generation Settings
+            </h3>
+        </div>
+        <div class="card-body">
+            <form method="get" id="filterForm">
+                <div class="form-group">
+                    <label class="form-label" for="college_id">
+                        Select Institution <span style="color: var(--error);">*</span>
+                    </label>
+                    <select id="college_id" name="college_id" class="form-control" onchange="document.getElementById('filterForm').submit()">
+                        <option value="">-- Select Institution --</option>
+                        {% for college in colleges %}
+                            <option value="{{ college.id }}" {% if selected_college_id == college.id %}selected{% endif %}>
+                                {{ college.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
+            
+            <form method="post" id="generateForm">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label" for="template_id">
+                        Certificate Template <span style="color: var(--error);">*</span>
+                    </label>
+                    <select id="template_id" name="template_id" class="form-control" required>
+                        <option value="">-- Select Template --</option>
+                        {% for template in templates %}
+                            <option value="{{ template.id }}">{{ template.name }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if not templates %}
+                        <p class="form-text" style="color: var(--warning);">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            No templates found. <a href="/admin/certificates/certificatetemplate/add/">Create a template</a> first.
+                        </p>
+                    {% endif %}
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;" id="generateBtn" disabled>
+                    <i class="fas fa-file-pdf"></i>
+                    Generate Certificates
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Students List Card -->
+    <div class="card mb-6">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-users" style="color: var(--success); margin-right: 8px;"></i>
+                Select Students
+            </h3>
+            {% if students %}
+            <div class="d-flex items-center gap-4">
+                <label class="d-flex items-center gap-2" style="cursor: pointer;">
+                    <input type="checkbox" id="selectAll" style="width: 18px; height: 18px;">
+                    <span class="text-muted" style="font-size: 0.875rem;">Select All</span>
+                </label>
+            </div>
+            {% endif %}
+        </div>
+        <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+            {% if students %}
+                <div class="student-list">
+                    {% for student in students %}
+                    <label class="d-flex items-center gap-3 p-3" style="border-bottom: 1px solid var(--border-color); cursor: pointer;">
+                        <input type="checkbox" name="selected_students" value="{{ student.id }}" 
+                               form="generateForm" class="student-checkbox" style="width: 18px; height: 18px;">
+                        <div class="user-avatar" style="width: 36px; height: 36px; font-size: 0.8rem; background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                            {{ student.username|slice:":1"|upper }}
+                        </div>
+                        <div>
+                            <div class="font-semibold">{{ student.get_full_name|default:student.username }}</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">{{ student.email }}</div>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+            {% elif selected_college_id %}
+                <div class="empty-state" style="padding: 40px 20px;">
+                    <div class="empty-state-icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <h3>No Students Found</h3>
+                    <p class="text-muted">This institution has no registered students.</p>
+                </div>
+            {% else %}
+                <div class="empty-state" style="padding: 40px 20px;">
+                    <div class="empty-state-icon">
+                        <i class="fas fa-hand-pointer"></i>
+                    </div>
+                    <h3>Select an Institution</h3>
+                    <p class="text-muted">Select an institution from the dropdown to view its students.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Info Cards -->
+<div class="grid-3 mb-6">
+    <div class="stat-card">
+        <div class="stat-icon blue">
+            <i class="fas fa-building"></i>
+        </div>
+        <div class="stat-content">
+            <span class="stat-value">{{ colleges|length }}</span>
+            <span class="stat-label">Institutions</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <i class="fas fa-file-alt"></i>
+        </div>
+        <div class="stat-content">
+            <span class="stat-value">{{ templates|length }}</span>
+            <span class="stat-label">Templates</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon purple">
+            <i class="fas fa-user-graduate"></i>
+        </div>
+        <div class="stat-content">
+            <span class="stat-value">{{ students|length|default:0 }}</span>
+            <span class="stat-label">Students Available</span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.student-checkbox');
+    const generateBtn = document.getElementById('generateBtn');
+    
+    function updateGenerateButton() {
+        const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+        const templateSelected = document.getElementById('template_id').value !== '';
+        generateBtn.disabled = !(anyChecked && templateSelected);
+    }
+    
+    if (selectAll) {
+        selectAll.addEventListener('change', function() {
+            checkboxes.forEach(cb => cb.checked = this.checked);
+            updateGenerateButton();
+        });
+    }
+    
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', updateGenerateButton);
+    });
+    
+    document.getElementById('template_id').addEventListener('change', updateGenerateButton);
+</script>
+{% endblock %}

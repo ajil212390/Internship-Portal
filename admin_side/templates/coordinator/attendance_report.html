@@ -1,0 +1,96 @@
+{% extends 'coordinator/base.html' %}
+{% block title %}Attendance Report - Coordinator{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="fas fa-chart-bar me-2"></i>Attendance Report</h2>
+                <p class="text-muted">View attendance percentage and eligibility status for all students</p>
+            </div>
+            <a href="{% url 'coordinator:eligible_students' %}" class="btn btn-success">
+                <i class="fas fa-certificate me-2"></i>View Eligible Students (≥75%)
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-users me-2"></i>Student Attendance Summary</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student</th>
+                            <th>Program</th>
+                            <th>Total Sessions</th>
+                            <th>Present</th>
+                            <th>Absent</th>
+                            <th>Attendance %</th>
+                            <th>Certificate Eligible</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for data in report_data %}
+                        <tr>
+                            <td>
+                                <strong>{{ data.student.get_full_name|default:data.student.username }}</strong>
+                                <br><small class="text-muted">{{ data.student.email }}</small>
+                            </td>
+                            <td>{{ data.program_name }}</td>
+                            <td>{{ data.total_sessions }}</td>
+                            <td><span class="text-success">{{ data.present }}</span></td>
+                            <td><span class="text-danger">{{ data.absent }}</span></td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                        <div class="progress-bar {% if data.percentage >= 75 %}bg-success{% elif data.percentage >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                             style="width: {{ data.percentage }}%;"></div>
+                                    </div>
+                                    <strong>{{ data.percentage }}%</strong>
+                                </div>
+                            </td>
+                            <td>
+                                {% if data.eligible %}
+                                    <span class="badge bg-success"><i class="fas fa-check me-1"></i>Eligible</span>
+                                {% else %}
+                                    <span class="badge bg-danger"><i class="fas fa-times me-1"></i>Not Eligible</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No attendance data found</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="card mt-4">
+        <div class="card-body">
+            <h6><i class="fas fa-info-circle me-2"></i>Legend</h6>
+            <div class="row">
+                <div class="col-md-4">
+                    <span class="badge bg-success me-2">≥75%</span> Eligible for Certificate
+                </div>
+                <div class="col-md-4">
+                    <span class="badge bg-warning me-2">50-74%</span> At Risk
+                </div>
+                <div class="col-md-4">
+                    <span class="badge bg-danger me-2">&lt;50%</span> Low Attendance
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

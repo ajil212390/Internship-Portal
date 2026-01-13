@@ -1,0 +1,136 @@
+{% extends "admin/custom_base.html" %}
+{% block title %}Applications{% endblock %}
+{% block page_title %}Manage Applications{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="d-flex justify-between items-center mb-6">
+    <div>
+        <p class="text-muted">Review and manage all student applications</p>
+    </div>
+    <div class="d-flex gap-4">
+        <button class="btn btn-secondary">
+            <i class="fas fa-filter"></i>
+            Filter
+        </button>
+        <button class="btn btn-secondary">
+            <i class="fas fa-download"></i>
+            Export
+        </button>
+    </div>
+</div>
+
+<!-- Applications Table Card -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">All Applications</h3>
+        <div class="d-flex gap-4">
+            <div class="search-box" style="width: 220px;">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search applications..." id="searchInput">
+            </div>
+        </div>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div class="table-container">
+            <table class="data-table" id="applicationsTable">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Course</th>
+                        <th>Internship</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in applications %}
+                    <tr>
+                        <td>
+                            <div class="d-flex items-center gap-4">
+                                <div class="user-avatar" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                                    {{ a.student.username|slice:":1"|upper }}
+                                </div>
+                                <div>
+                                    <div class="font-semibold">{{ a.student.username }}</div>
+                                    <div class="text-muted" style="font-size: 0.75rem;">{{ a.student.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if a.course %}
+                                <span class="d-flex items-center gap-2">
+                                    <i class="fas fa-book text-muted"></i>
+                                    {{ a.course.name }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if a.internship %}
+                                <span class="d-flex items-center gap-2">
+                                    <i class="fas fa-briefcase text-muted"></i>
+                                    {{ a.internship.title }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if a.status == 'pending' %}
+                                <span class="badge badge-warning">Pending</span>
+                            {% elif a.status == 'approved' %}
+                                <span class="badge badge-success">Approved</span>
+                            {% elif a.status == 'rejected' %}
+                                <span class="badge badge-error">Rejected</span>
+                            {% else %}
+                                <span class="badge badge-neutral">{{ a.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-success btn-sm">
+                                    <i class="fas fa-check"></i>
+                                    Approve
+                                </button>
+                                <button class="btn btn-danger btn-sm">
+                                    <i class="fas fa-times"></i>
+                                    Reject
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                                <h3>No Applications Found</h3>
+                                <p>Applications will appear here once students apply</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        const filter = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#applicationsTable tbody tr');
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(filter) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}

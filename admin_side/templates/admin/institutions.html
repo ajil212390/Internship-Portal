@@ -1,0 +1,155 @@
+{% extends "admin/custom_base.html" %}
+{% block title %}Institutions{% endblock %}
+{% block page_title %}Manage Institutions{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="d-flex justify-between items-center mb-6">
+    <div>
+        <p class="text-muted">Manage all registered colleges and their coordinators</p>
+    </div>
+    <a href="{% url 'add_institution' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i>
+        Add Institution
+    </a>
+</div>
+
+<!-- Institutions Table Card -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">All Institutions</h3>
+        <div class="d-flex gap-4">
+            <div class="search-box" style="width: 220px;">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search institutions..." id="searchInput">
+            </div>
+        </div>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div class="table-container">
+            <table class="data-table" id="institutionsTable">
+                <thead>
+                    <tr>
+                        <th>College Name</th>
+                        <th>Location</th>
+                        <th>Principal</th>
+                        <th>Contact</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for i in institutions %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'institution_detail' i.id %}" class="d-flex items-center gap-4" style="text-decoration: none; color: inherit;">
+                                <div class="stat-icon blue" style="width: 40px; height: 40px; font-size: 0.9rem;">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                                <div>
+                                    <div class="font-semibold" style="color: var(--primary-600);">{{ i.name }}</div>
+                                    {% if i.email %}
+                                    <div class="text-muted" style="font-size: 0.75rem;">
+                                        <i class="fas fa-envelope"></i> {{ i.email }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </a>
+                        </td>
+                        <td>
+                            <span class="d-flex items-center gap-2">
+                                <i class="fas fa-map-marker-alt text-muted"></i>
+                                {{ i.location }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if i.principal_name %}
+                                <div class="font-semibold">{{ i.principal_name }}</div>
+                                {% if i.principal_email %}
+                                <div class="text-muted" style="font-size: 0.75rem;">
+                                    <i class="fas fa-envelope"></i> {{ i.principal_email }}
+                                </div>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted">Not Specified</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if i.phone %}
+                                <div class="d-flex items-center gap-2">
+                                    <i class="fas fa-phone text-muted"></i>
+                                    {{ i.phone }}
+                                </div>
+                            {% endif %}
+                            {% if i.principal_phone %}
+                                <div class="d-flex items-center gap-2 mt-1" style="font-size: 0.75rem;">
+                                    <i class="fas fa-user text-muted"></i>
+                                    {{ i.principal_phone }}
+                                </div>
+                            {% endif %}
+                            {% if not i.phone and not i.principal_phone %}
+                                <span class="text-muted">--</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if i.is_active %}
+                                <span class="badge badge-success">Active</span>
+                            {% else %}
+                                <span class="badge badge-error">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'edit_institution' i.id %}" class="btn btn-secondary btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                    Edit
+                                </a>
+                                <a href="{% url 'toggle_institution_status' i.id %}" 
+                                   class="btn {% if i.is_active %}btn-warning{% else %}btn-success{% endif %} btn-sm">
+                                    <i class="fas fa-{% if i.is_active %}ban{% else %}check{% endif %}"></i>
+                                </a>
+                                <button type="button" class="btn btn-danger btn-sm"
+                                        onclick="showDeleteModal('{% url 'delete_institution' i.id %}', '{{ i.name }}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                                <h3>No Institutions Found</h3>
+                                <p>Get started by adding your first institution</p>
+                                <a href="{% url 'add_institution' %}" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i>
+                                    Add Institution
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Simple search functionality
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        const filter = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#institutionsTable tbody tr');
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(filter) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}

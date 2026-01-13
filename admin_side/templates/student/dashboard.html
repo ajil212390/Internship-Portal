@@ -1,0 +1,219 @@
+{% extends 'student/base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-content">
+            <span class="stat-label">Total Applications</span>
+            <span class="stat-value">{{ total_applications }}</span>
+        </div>
+        <div class="stat-icon blue">
+            <i class="fas fa-file-alt"></i>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-content">
+            <span class="stat-label">Approved</span>
+            <span class="stat-value">{{ approved_applications }}</span>
+        </div>
+        <div class="stat-icon green">
+            <i class="fas fa-check-circle"></i>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-content">
+            <span class="stat-label">Pending</span>
+            <span class="stat-value">{{ pending_applications }}</span>
+        </div>
+        <div class="stat-icon orange">
+            <i class="fas fa-clock"></i>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-content">
+            <span class="stat-label">Available Programs</span>
+            <span class="stat-value">{{ courses|length|add:internships|length }}</span>
+        </div>
+        <div class="stat-icon purple">
+            <i class="fas fa-book-open"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Search Section -->
+<div class="card" style="margin-bottom: var(--space-6);">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-search" style="margin-right: 8px;"></i>Search Programs</h3>
+    </div>
+    <div class="card-body">
+        <form method="get" action="{% url 'student:search' %}" style="display: flex; gap: var(--space-4);">
+            <input type="text" name="q" value="{{ query }}" placeholder="Search courses, internships..." 
+                   class="form-control" style="flex: 1; padding: var(--space-3) var(--space-4); border: 1px solid var(--border-light); border-radius: var(--radius-md);">
+            <select name="type" class="form-control" style="width: 150px; padding: var(--space-3) var(--space-4); border: 1px solid var(--border-light); border-radius: var(--radius-md);">
+                <option value="all" {% if program_type == 'all' %}selected{% endif %}>All Types</option>
+                <option value="course" {% if program_type == 'course' %}selected{% endif %}>Courses</option>
+                <option value="internship" {% if program_type == 'internship' %}selected{% endif %}>Internships</option>
+            </select>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search"></i> Search
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Two Column Layout -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6);">
+    <!-- Available Courses -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-graduation-cap" style="margin-right: 8px;"></i>Available Courses</h3>
+            <a href="{% url 'student:programs' %}?type=course" class="btn btn-secondary btn-sm">View All</a>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            {% if courses %}
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Course Name</th>
+                            <th>Institution</th>
+                            <th>Seats</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for course in courses %}
+                        <tr>
+                            <td>
+                                <strong>{{ course.name }}</strong>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">{{ course.duration_days }} days</div>
+                            </td>
+                            <td>{{ course.institution.name }}</td>
+                            <td>
+                                <span class="badge {% if course.available_seats > 0 %}badge-success{% else %}badge-error{% endif %}">
+                                    {{ course.available_seats }} left
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'student:program_detail' course.id %}?type=course" class="btn btn-primary btn-sm">View</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="padding: var(--space-8); text-align: center; color: var(--text-muted);">
+                <i class="fas fa-book" style="font-size: 2rem; margin-bottom: var(--space-4);"></i>
+                <p>No courses available at the moment.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Available Internships -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-briefcase" style="margin-right: 8px;"></i>Available Internships</h3>
+            <a href="{% url 'student:programs' %}?type=internship" class="btn btn-secondary btn-sm">View All</a>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            {% if internships %}
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Internship</th>
+                            <th>Institution</th>
+                            <th>Seats</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for internship in internships %}
+                        <tr>
+                            <td>
+                                <strong>{{ internship.title }}</strong>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">{{ internship.duration }} days</div>
+                            </td>
+                            <td>{{ internship.institution.name }}</td>
+                            <td>
+                                <span class="badge {% if internship.available_seats > 0 %}badge-success{% else %}badge-error{% endif %}">
+                                    {{ internship.available_seats }} left
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'student:program_detail' internship.id %}?type=internship" class="btn btn-primary btn-sm">View</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="padding: var(--space-8); text-align: center; color: var(--text-muted);">
+                <i class="fas fa-briefcase" style="font-size: 2rem; margin-bottom: var(--space-4);"></i>
+                <p>No internships available at the moment.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Recent Applications -->
+<div class="card" style="margin-top: var(--space-6);">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-history" style="margin-right: 8px;"></i>Recent Applications</h3>
+        <a href="{% url 'student:applications' %}" class="btn btn-secondary btn-sm">View All</a>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        {% if recent_applications %}
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Program</th>
+                        <th>Type</th>
+                        <th>Applied Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in recent_applications %}
+                    <tr>
+                        <td><strong>{{ app.program_name }}</strong></td>
+                        <td>
+                            <span class="tag">{{ app.program_type }}</span>
+                        </td>
+                        <td>{{ app.applied_at|date:"M d, Y" }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if app.status == 'APPROVED' %}badge-success
+                                {% elif app.status == 'PENDING' %}badge-warning
+                                {% elif app.status == 'REJECTED' %}badge-error
+                                {% else %}badge-neutral{% endif %}">
+                                {{ app.get_status_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="padding: var(--space-8); text-align: center; color: var(--text-muted);">
+            <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: var(--space-4);"></i>
+            <p>No applications yet. Start exploring programs!</p>
+            <a href="{% url 'student:programs' %}" class="btn btn-primary" style="margin-top: var(--space-4);">Browse Programs</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

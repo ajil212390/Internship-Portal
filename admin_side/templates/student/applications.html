@@ -1,0 +1,107 @@
+{% extends 'student/base.html' %}
+
+{% block title %}My Applications{% endblock %}
+{% block page_title %}My Applications{% endblock %}
+
+{% block content %}
+<!-- Filter Section -->
+<div class="card" style="margin-bottom: var(--space-6);">
+    <div class="card-body">
+        <form method="get" style="display: flex; gap: var(--space-4); align-items: center;">
+            <label style="font-weight: 500;">Filter by Status:</label>
+            <select name="status" class="form-control" style="width: 180px; padding: var(--space-3) var(--space-4); border: 1px solid var(--border-light); border-radius: var(--radius-md);" onchange="this.form.submit()">
+                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Status</option>
+                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+                <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+                <option value="withdrawn" {% if status_filter == 'withdrawn' %}selected{% endif %}>Withdrawn</option>
+            </select>
+        </form>
+    </div>
+</div>
+
+<!-- Applications List -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-file-alt" style="margin-right: 8px;"></i>Applications ({{ applications|length }})</h3>
+        <a href="{% url 'student:programs' %}" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus"></i> Apply for New Program
+        </a>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        {% if applications %}
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Program</th>
+                        <th>Type</th>
+                        <th>Institution</th>
+                        <th>Applied Date</th>
+                        <th>Status</th>
+                        <th>Reviewed</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in applications %}
+                    <tr>
+                        <td>
+                            <strong>{{ app.program_name }}</strong>
+                        </td>
+                        <td>
+                            <span class="tag">{{ app.program_type }}</span>
+                        </td>
+                        <td>
+                            {% if app.course %}{{ app.course.institution.name }}{% elif app.internship %}{{ app.internship.institution.name }}{% else %}-{% endif %}
+                        </td>
+                        <td>{{ app.applied_at|date:"M d, Y" }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if app.status == 'APPROVED' %}badge-success
+                                {% elif app.status == 'PENDING' %}badge-warning
+                                {% elif app.status == 'REJECTED' %}badge-error
+                                {% else %}badge-neutral{% endif %}">
+                                {{ app.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if app.reviewed_at %}
+                                {{ app.reviewed_at|date:"M d, Y" }}
+                            {% else %}
+                                <span style="color: var(--text-muted);">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if app.notes %}
+                                <span title="{{ app.notes }}" style="cursor: pointer;">
+                                    <i class="fas fa-comment" style="color: var(--info);"></i>
+                                </span>
+                            {% else %}
+                                <span style="color: var(--text-muted);">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="padding: var(--space-12); text-align: center;">
+            <i class="fas fa-inbox" style="font-size: 3rem; color: var(--text-muted); margin-bottom: var(--space-4);"></i>
+            <h3 style="margin-bottom: var(--space-2);">No applications found</h3>
+            <p style="color: var(--text-secondary); margin-bottom: var(--space-6);">
+                {% if status_filter != 'all' %}
+                    No applications with status "{{ status_filter }}"
+                {% else %}
+                    You haven't applied to any programs yet
+                {% endif %}
+            </p>
+            <a href="{% url 'student:programs' %}" class="btn btn-primary">
+                <i class="fas fa-search"></i> Browse Programs
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
