@@ -1,0 +1,18 @@
+{% url 'dashboard' as dashboard_url %}
+<div class="py-4 px-4">
+  <button aria-label="Go back" class="inline-flex items-center gap-2 bg-transparent text-primary px-2 py-2 rounded" onclick="(function(){try{var r=document.referrer; if(r && new URL(r).origin===location.origin){history.back();}else{location.href='{{ dashboard_url }}';}}catch(e){location.href='{{ dashboard_url }}';}})();return false;">
+    <span class="material-symbols-outlined">arrow_back</span>
+    Back
+  </button>
+  <h1 class="inline-block ml-4">Programs</h1>
+</div>
+
+<a href="/admin/programs/program/add/">Add New Program</a>
+
+<ul>
+  {% for program in programs %}
+    <li>
+      {{ program.title }} - {{ program.program_type }}
+    </li>
+  {% endfor %}
+</ul>

@@ -1,0 +1,53 @@
+{% extends 'student/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="main-content">
+        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Explore Internships</h1>
+        </div>
+
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <form method="GET" action="{% url 'track_status' %}" class="row g-3">
+                    <div class="col-md-4">
+                        <input type="text" name="course" class="form-control" placeholder="Search Courses (e.g. Python)" value="{{ request.GET.course }}">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" name="institution" class="form-control" placeholder="Institution" value="{{ request.GET.institution }}">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" name="place" class="form-control" placeholder="Location" value="{{ request.GET.place }}">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100 fw-bold">Search</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="row mb-5">
+            <h5 class="fw-bold text-primary mb-3">Available Programs</h5>
+            {% for program in programs %}
+            <div class="col-md-4 mb-3">
+                <div class="card internship-card p-3 shadow-sm h-100">
+                    <h5 class="text-primary fw-bold">{{ program.title }}</h5>
+                    <p class="text-dark mb-1"><strong>{{ program.institution_name }}</strong></p>
+                    <p class="text-muted small"><i class="fas fa-map-marker-alt me-1"></i> {{ program.location }}</p>
+                    <div class="mt-auto">
+                        <a href="{% url 'program_details' program.id %}" class="btn btn-outline-primary btn-sm w-100">
+                            View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-4">
+                <p class="text-muted">No new programs found matching your criteria.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

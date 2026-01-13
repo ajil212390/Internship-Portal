@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Student Attendance</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display min-h-screen p-4">
+  {% url 'dashboard' as dashboard_url %}
+  <div class="max-w-3xl mx-auto">
+    <div class="flex items-center gap-3 mb-4">
+      <button aria-label="Go back" class="inline-flex items-center gap-2" onclick="(function(){try{var r=document.referrer; if(r && new URL(r).origin===location.origin){history.back();}else{location.href='{{ dashboard_url }}';}}catch(e){location.href='{{ dashboard_url }}';}})();return false;">
+        <span class="material-symbols-outlined">arrow_back</span>
+      </button>
+      <h1 class="text-xl font-bold">{{ application.student_name }}</h1>
+    </div>
+
+    <section class="bg-white dark:bg-slate-900 p-4 rounded-lg shadow-sm mb-4">
+      <h2 class="font-semibold mb-2">Attendance Records</h2>
+      {% if records %}
+        <div class="space-y-2">
+          {% for r in records %}
+            <form method="post" class="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 p-2 rounded">
+              {% csrf_token %}
+              <div class="flex-1">{{ r.date }}</div>
+              <input type="hidden" name="attendance_id" value="{{ r.id }}" />
+              <select name="status" class="form-select">
+                <option value="present" {% if r.status == 'present' %}selected{% endif %}>Present</option>
+                <option value="absent" {% if r.status == 'absent' %}selected{% endif %}>Absent</option>
+                <option value="late" {% if r.status == 'late' %}selected{% endif %}>Late</option>
+              </select>
+              <button type="submit" class="bg-primary text-white px-3 py-1 rounded">Save</button>
+            </form>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p>No attendance records found for this student.</p>
+      {% endif %}
+    </section>
+
+    <section class="bg-white dark:bg-slate-900 p-4 rounded-lg shadow-sm">
+      <h3 class="font-semibold mb-2">Add / Mark for a Date</h3>
+      <form method="post" class="flex items-center gap-2">
+        {% csrf_token %}
+        <input type="date" name="new_date" class="form-input" required />
+        <select name="new_status" class="form-select">
+          <option value="present">Present</option>
+          <option value="absent">Absent</option>
+          <option value="late">Late</option>
+        </select>
+        <button type="submit" class="bg-primary text-white px-3 py-1 rounded">Add</button>
+      </form>
+    </section>
+  </div>
+</body>
+</html>

@@ -1,0 +1,5 @@
+{% url 'dashboard' as dashboard_url %}
+<button aria-label="Go back" class="absolute top-4 left-4 z-60 flex items-center gap-2 bg-white/90 dark:bg-[#0b1720]/90 border border-slate-200 dark:border-slate-800 text-primary dark:text-white px-3 py-2 rounded-lg shadow-sm" onclick="(function(){try{var r=document.referrer; if(r && new URL(r).origin===location.origin){history.back();}else{location.href='{{ dashboard_url }}';}}catch(e){location.href='{{ dashboard_url }}';}})();return false;">
+  <span class="material-symbols-outlined">arrow_back</span>
+  <span class="text-sm font-medium">Back</span>
+</button>

@@ -1,0 +1,164 @@
+/* --- Root Variables & Theme Colors --- */
+:root {
+    --sidebar-width: 250px;
+    --primary-blue: #4e73df;
+    --dark-blue: #224abe;
+    --success-green: #1cc88a;
+    --info-teal: #36b9cc;
+    --warning-yellow: #f6c23e;
+    --danger-red: #e74a3b;
+    --bg-light: #f8f9fc;
+    --text-gray: #5a5c69;
+    --card-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+/* --- Global Layout --- */
+body {
+    background-color: var(--bg-light);
+    color: var(--text-gray);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+}
+
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* --- Sidebar Styling --- */
+.sidebar {
+    width: var(--sidebar-width);
+    background: linear-gradient(180deg, var(--primary-blue) 10%, var(--dark-blue) 100%);
+    color: white;
+    padding-top: 20px;
+    position: fixed;
+    height: 100vh;
+}
+
+.sidebar-brand {
+    text-align: center;
+    font-weight: 800;
+    font-size: 1.2rem;
+    padding: 1rem;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.sidebar .nav-link {
+    color: rgba(255, 255, 255, .8);
+    padding: 15px 25px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.sidebar .nav-link:hover, 
+.sidebar .nav-link.active {
+    color: white;
+    background: rgba(255, 255, 255, .15);
+    border-left: 4px solid white;
+}
+
+/* --- Main Content Area --- */
+.main-content {
+    flex-grow: 1;
+    margin-left: var(--sidebar-width); /* Push content past the fixed sidebar */
+    padding: 30px;
+}
+
+/* --- Dashboard Stat Cards --- */
+.stat-card {
+    border: none;
+    border-left: 5px solid var(--primary-blue);
+    border-radius: 8px;
+    box-shadow: var(--card-shadow);
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+}
+
+.status-approved { border-left-color: var(--success-green); }
+.status-pending { border-left-color: var(--warning-yellow); }
+.status-completed { border-left-color: var(--info-teal); }
+
+/* --- Internship Cards (Search Page) --- */
+.internship-card {
+    border: none;
+    border-radius: 12px;
+    background: #fff;
+    transition: all 0.3s ease;
+}
+
+.internship-card:hover {
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+}
+
+.search-banner {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 30px;
+}
+
+/* --- Attendance & Progress --- */
+.progress {
+    height: 1.2rem;
+    border-radius: 20px;
+    background-color: #eaecf4;
+    overflow: hidden;
+}
+
+.progress-bar {
+    font-weight: bold;
+    font-size: 0.75rem;
+    line-height: 1.2rem;
+}
+
+.attendance-table-card {
+    border-radius: 10px;
+    border: none;
+    box-shadow: var(--card-shadow);
+}
+
+.attendance-table th {
+    background: #f8f9fc;
+    color: var(--primary-blue);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+
+/* --- Auth Pages (Login/Signup) --- */
+.auth-bg {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--dark-blue) 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.2);
+}
+
+.form-control {
+    border-radius: 8px;
+    padding: 10px 15px;
+    border: 1px solid #d1d3e2;
+}
+
+.form-control:focus {
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+/* --- Utility Classes --- */
+.text-primary { color: var(--primary-blue) !important; }
+.text-success { color: var(--success-green) !important; }
+.text-warning { color: var(--warning-yellow) !important; }
+.btn-primary { background-color: var(--primary-blue); border: none; }
+.btn-primary:hover { background-color: var(--dark-blue); }

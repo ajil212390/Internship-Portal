@@ -1,0 +1,64 @@
+{% extends 'student/base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex align-items-center mb-4">
+        <i class="fas fa-book-reader fa-2x text-primary me-3"></i>
+        <h2 class="fw-bold text-gray-800 mb-0">My Learning Portal</h2>
+    </div>
+    
+    <div class="row">
+        {% for app in enrolled_courses %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card shadow border-0 h-100 rounded-4 overflow-hidden">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="fw-bold text-primary mb-0">{{ app.program.title }}</h5>
+                        <span class="badge {% if app.status == 'Completed' %}bg-primary{% else %}bg-success{% endif %} rounded-pill">
+                            {{ app.status }}
+                        </span>
+                    </div>
+                    <p class="text-muted small mb-4"><i class="fas fa-building me-1"></i> {{ app.program.institution_name }}</p>
+                    
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span class="text-muted">Attendance Progress</span>
+                            <span class="fw-bold">{{ app.attendance_pct|floatformat:0 }}%</span>
+                        </div>
+                        <div class="progress" style="height: 8px; border-radius: 10px;">
+                            <div class="progress-bar {% if app.attendance_pct < 75 %}bg-danger{% else %}bg-success{% endif %}" 
+                                 role="progressbar" style="width: {{ app.attendance_pct }}%"></div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'view_attendance' app.id %}" class="btn btn-outline-primary btn-sm rounded-3">
+                            <i class="fas fa-calendar-check me-1"></i> Track Attendance
+                        </a>
+                        
+                        {% if app.status == 'Completed' and app.attendance_pct >= 80 %}
+                        <a href="{% url 'download_certificate' app.id %}" class="btn btn-warning btn-sm fw-bold rounded-3 shadow-sm">
+                            <i class="fas fa-award me-1"></i> Download Certificate
+                        </a>
+                        {% elif app.status == 'Completed' %}
+                        <div class="alert alert-light border small mb-0 py-2">
+                            <i class="fas fa-info-circle me-1"></i> Low attendance for certificate.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="bg-white p-5 rounded-4 shadow-sm border">
+                <i class="fas fa-search fa-3x text-light mb-3"></i>
+                <h4 class="text-gray-800">No active enrollments</h4>
+                <p class="text-muted">Explore the dashboard to find and apply for new internship programs.</p>
+                <a href="{% url 'track_status' %}" class="btn btn-primary px-4 fw-bold">Explore Now</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

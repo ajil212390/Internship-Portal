@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Manage Programs &amp; Internships</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#137fec",
+              "background-light": "#f6f7f8",
+              "background-dark": "#101922",
+              "navy": "#0d141b",
+              "slate-grey": "#4c739a"
+            },
+            fontFamily: {"display": ["Lexend", "sans-serif"]},
+          },
+        },
+      }
+    </script>
+<style>body{font-family:Lexend, sans-serif} .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght'400}</style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-navy dark:text-white antialiased">
+{% url 'dashboard' as dashboard_url %}
+<div class="relative flex h-screen w-full flex-col overflow-x-hidden">
+<header class="sticky top-0 z-40 flex items-center bg-white dark:bg-background-dark border-b border-slate-200 dark:border-slate-800 p-4 justify-between">
+  <div class="text-navy dark:text-white flex size-12 shrink-0 items-center justify-start">
+    <button aria-label="Go back" class="flex items-center gap-2 bg-transparent text-navy dark:text-white px-2 py-2 rounded" onclick="(function(){try{var r=document.referrer; if(r && new URL(r).origin===location.origin){history.back();}else{location.href='{{ dashboard_url }}';}}catch(e){location.href='{{ dashboard_url }}';}})();return false;">
+      <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
+    </button>
+    <span class="material-symbols-outlined cursor-pointer" style="font-size: 24px;">menu</span>
+  </div>
+  <h2 class="text-navy dark:text-white text-lg font-bold leading-tight tracking-tight flex-1 text-center">Manage Programs</h2>
+  <div class="flex w-12 items-center justify-end"><button class="flex items-center justify-center rounded-lg h-10 w-10 bg-transparent text-navy dark:text-white"><span class="material-symbols-outlined" style="font-size: 24px;">notifications</span></button></div>
+</header>
+<main class="flex-1 overflow-y-auto pb-24">
+  <div class="px-4 py-4">
+    <form method="post" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+      {% csrf_token %}
+      <div class="md:col-span-2">
+        <label class="block text-sm text-slate-grey mb-1">Title</label>
+        {{ form.title }}
+      </div>
+      <div>
+        <label class="block text-sm text-slate-grey mb-1">Price</label>
+        {{ form.price }}
+      </div>
+      <div>
+        <label class="block text-sm text-slate-grey mb-1">Duration</label>
+        {{ form.duration }}
+      </div>
+      <div>
+        <label class="block text-sm text-slate-grey mb-1">Type</label>
+        {{ form.program_type }}
+      </div>
+      <div class="md:col-span-3">
+        <label class="block text-sm text-slate-grey mb-1">Description</label>
+        {{ form.description }}
+      </div>
+      <div>
+        <label class="inline-flex items-center gap-2">
+          {{ form.is_active }} <span class="text-sm text-slate-grey">Active</span>
+        </label>
+      </div>
+      <div>
+        <button class="bg-primary text-white px-4 py-2 rounded-lg">Add Program</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="grid grid-cols-1 gap-4 px-4">
+    {% for p in programs %}
+      <div class="bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
+        <div class="flex justify-between items-start">
+          <div class="flex flex-col">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-grey mb-1">{{ p.get_program_type_display }}</span>
+            <h4 class="text-navy dark:text-white text-base font-bold leading-snug">{{ p.title }}</h4>
+          </div>
+          {% if p.is_active %}
+            <span class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide">Active</span>
+          {% else %}
+            <span class="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide">Inactive</span>
+          {% endif %}
+        </div>
+        <div class="flex items-center gap-4 py-2 border-y border-slate-50 dark:border-slate-800">
+          <div class="flex flex-col">
+            <p class="text-slate-grey text-xs">Description</p>
+            <p class="text-navy dark:text-white font-bold">{{ p.description|truncatechars:80 }}</p>
+          </div>
+          <div class="flex flex-col items-end">
+            <p class="text-slate-grey text-xs">Price</p>
+            <p class="text-navy dark:text-white font-bold">{{ p.price|floatformat:2 }}</p>
+            <p class="text-slate-grey text-xs">Duration</p>
+            <p class="text-navy dark:text-white font-bold">{{ p.duration }}</p>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <p class="px-4">No programs yet.</p>
+    {% endfor %}
+  </div>
+</main>
+<button class="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-xl hover:bg-primary/90"><span class="material-symbols-outlined" style="font-size: 28px;">add</span></button>
+</div>
+</body></html>

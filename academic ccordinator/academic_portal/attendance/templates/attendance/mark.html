@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mark Attendance</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Lexend"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .segmented-control input:checked + label {
+            background-color: #137fec;
+            color: white;
+            font-weight: 500;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#0d141b] dark:text-slate-50 min-h-screen pb-24">
+<!-- Top Navigation Bar -->
+{% url 'dashboard' as dashboard_url %}
+<nav class="sticky top-0 z-30 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+<div class="flex items-center p-4 justify-between">
+<div class="flex items-center gap-2">
+    <button aria-label="Go back" class="flex items-center gap-2 bg-transparent text-primary dark:text-white px-2 py-2 rounded" onclick="(function(){try{var r=document.referrer; if(r && new URL(r).origin===location.origin){history.back();}else{location.href='{{ dashboard_url }}';}}catch(e){location.href='{{ dashboard_url }}';}})();return false;">
+        <span class="material-symbols-outlined">arrow_back</span>
+        <span class="sr-only">Back</span>
+    </button>
+    <h2 class="text-lg font-bold leading-tight tracking-tight">Mark Attendance</h2>
+</div>
+<button class="text-primary text-sm font-semibold">Mark All Present</button>
+</div>
+</nav>
+<!-- Context Header -->
+<div class="px-4 pt-4">
+<div class="bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-800">
+<h3 class="text-primary text-xs font-bold uppercase tracking-wider">Current Course</h3>
+<p class="text-lg font-bold mt-1">{% if selected_program %}{{ selected_program.title }}{% else %}Select a program{% endif %}</p>
+<p class="text-slate-500 dark:text-slate-400 text-sm">{% if selected_program %}{{ selected_program.duration }} • {{ selected_program.price|floatformat:2 }}{% else %}Select program to see details{% endif %}</p>
+</div>
+</div>
+<!-- Calendar Picker -->
+<div class="px-4 py-4">
+<div class="bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-800">
+<div class="flex items-center justify-between mb-4">
+<button class="material-symbols-outlined text-slate-400">chevron_left</button>
+<p class="font-bold">{{ mark_date|date:'F Y' }}</p>
+<button class="material-symbols-outlined text-slate-400">chevron_right</button>
+</div>
+<div class="grid grid-cols-7 gap-1 text-center text-xs mb-2 text-slate-400 font-bold">
+<span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+</div>
+<!-- small static calendar row -->
+<div class="grid grid-cols-7 gap-1">
+    <button class="aspect-square flex flex-col items-center justify-center rounded-lg text-sm">1</button>
+    <button class="aspect-square flex flex-col items-center justify-center rounded-lg text-sm">2</button>
+    <button class="aspect-square flex flex-col items-center justify-center rounded-lg text-sm">3</button>
+    <button class="aspect-square flex flex-col items-center justify-center rounded-lg bg-primary text-white text-sm font-bold shadow-md shadow-primary/30">{{ mark_date|date:'j' }}</button>
+    <button class="aspect-square flex flex-col items-center justify-center rounded-lg text-sm">5</button>
+    <button class="aspect-square flex flex-col items-center justify-center rounded-lg text-sm">6</button>
+    <button class="aspect-square flex flex-col items-center justify-center rounded-lg text-sm">7</button>
+</div>
+</div>
+</div>
+<!-- Search Bar -->
+<div class="px-4 pb-2">
+<div class="relative flex items-center h-12 w-full">
+<span class="material-symbols-outlined absolute left-4 text-slate-400">search</span>
+<input class="w-full h-full pl-12 pr-4 rounded-xl bg-white dark:bg-slate-900 border-none shadow-sm focus:ring-2 focus:ring-primary/20 text-sm" placeholder="Search students by name or ID"/>
+</div>
+</div>
+<!-- Student List Header -->
+<div class="px-4 py-2 flex justify-between items-center">
+<span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Students ({{ applications|length }})</span>
+<form method="get" class="flex items-center gap-2">
+    <select name="program" class="form-select">
+        <option value="">All programs</option>
+        {% for p in programs %}
+            <option value="{{ p.id }}" {% if selected_program and p.id == selected_program.id %}selected{% endif %}>{{ p.title }}</option>
+        {% endfor %}
+    </select>
+    <input type="date" name="date" value="{{ mark_date|date:'Y-m-d' }}" class="form-input">
+    <button class="text-xs text-primary font-medium">Filter</button>
+</form>
+</div>
+<!-- Student List Items -->
+<form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="date" value="{{ mark_date|date:'Y-m-d' }}">
+    {% if selected_program %}<input type="hidden" name="program" value="{{ selected_program.id }}">{% endif %}
+    <div class="flex flex-col gap-2 px-4">
+        {% for app in applications %}
+        <div class="bg-white dark:bg-slate-900 p-3 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
+        <div class="flex items-center gap-3 mb-3">
+        <div class="h-12 w-12 rounded-full bg-slate-200 overflow-hidden shrink-0">
+            {% comment %} avatar placeholder {% endcomment %}
+            <img class="h-full w-full object-cover" src="https://via.placeholder.com/48" alt="{{ app.student_name }}"/>
+        </div>
+        <div class="flex-1 min-w-0">
+        <p class="font-bold text-sm truncate"><a href="{% url 'attendance:student_attendance' app.id %}" class="text-primary">{{ app.student_name }}</a></p>
+        <p class="text-xs text-slate-500">ID: {{ app.id }}</p>
+        </div>
+        </div>
+        <div class="segmented-control flex p-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
+            <input checked class="hidden" id="s{{ forloop.counter }}-p" name="attendance_{{ app.id }}" type="radio" value="present" />
+            <label class="flex-1 text-center py-1.5 text-xs font-medium rounded-md cursor-pointer transition-all" for="s{{ forloop.counter }}-p">Present</label>
+            <input class="hidden" id="s{{ forloop.counter }}-a" name="attendance_{{ app.id }}" type="radio" value="absent" />
+            <label class="flex-1 text-center py-1.5 text-xs font-medium rounded-md cursor-pointer transition-all" for="s{{ forloop.counter }}-a">Absent</label>
+            <input class="hidden" id="s{{ forloop.counter }}-l" name="attendance_{{ app.id }}" type="radio" value="late" />
+            <label class="flex-1 text-center py-1.5 text-xs font-medium rounded-md cursor-pointer transition-all" for="s{{ forloop.counter }}-l">Late</label>
+        </div>
+        </div>
+        {% empty %}
+            <p class="px-4">No enrolled students found.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Sticky Bottom Save Action -->
+    <div class="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background-light dark:from-background-dark via-background-light/95 dark:via-background-dark/95 to-transparent">
+    <button type="submit" class="w-full bg-primary text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/30 flex items-center justify-center gap-2 active:scale-95 transition-transform">
+    <span class="material-symbols-outlined">save</span>
+                Save Attendance
+            </button>
+    </div>
+</form>
+</body></html>
