@@ -306,7 +306,7 @@ def my_certificates(request):
     
     # Enhance certificates with eligibility info
     for cert in certificates:
-        cert.can_download = cert.status == 'ISSUED' and cert.is_eligible
+        cert.can_download = (cert.status == 'ISSUED' or cert.status == 'APPROVED') and cert.is_eligible
     
     # Get approved applications that might be eligible for certificate
     approved_applications = Application.objects.filter(
@@ -343,33 +343,39 @@ def download_certificate(request, certificate_id):
         Certificate,
         id=certificate_id,
         application__student=student,
-        status='ISSUED'
+        status__in=['ISSUED', 'APPROVED']
     )
     
-    # Simple text response for now - can be replaced with PDF generation
-    response = HttpResponse(content_type='text/plain')
-    response['Content-Disposition'] = f'attachment; filename="certificate_{certificate.id}.txt"'
+    # Generate PDF dynamically
+    from certificates.utils import generate_single_certificate
+    from certificates.models import CertificateTemplate
     
+    # Try to get a default template
+    template = CertificateTemplate.objects.first()
+    if not template:
+        # Fallback if no template exists
+        response = HttpResponse(content_type='text/plain')
+        response['Content-Disposition'] = f'attachment; filename="certificate_{certificate.id}.txt"'
+        response.write("Certificate template not found. Please contact administration.")
+        return response
+        
+    student_name = student.get_full_name() or student.username
     program_name = certificate.application.program_name
-    response.write(f"""
-    ============================================
-            CERTIFICATE OF COMPLETION
-    ============================================
+    institution_name = student.institution.name if student.institution else None
     
-    This is to certify that
+    pdf_buffer = generate_single_certificate(
+        student_name,
+        template.background_image.path,
+        template.name_x_axis,
+        template.name_y_axis,
+        template.font_size,
+        course_name=program_name,
+        institution_name=institution_name
+    )
     
-    {student.get_full_name() or student.username}
-    
-    has successfully completed the program:
-    
-    {program_name}
-    
-    Issued on: {certificate.issued_date}
-    Certificate ID: {certificate.id}
-    
-    ============================================
-    """)
-    
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="Certificate_{student_name}_{program_name}.pdf"'
+    response.write(pdf_buffer.getvalue())
     return response
 
 

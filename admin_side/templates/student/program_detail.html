@@ -1,6 +1,6 @@
 {% extends 'student/base.html' %}
 
-{% block title %}{{ program.name|default:program.title }}{% endblock %}
+{% block title %}{% if program_type == 'course' %}{{ program.name }}{% else %}{{ program.title }}{% endif %}{% endblock %}
 {% block page_title %}Program Details{% endblock %}
 
 {% block content %}

@@ -37,6 +37,32 @@
                         {% endfor %}
                     </select>
                 </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="course_id">
+                        Select Course <span style="color: var(--error);">*</span>
+                    </label>
+                    <select id="course_id" name="course_id" class="form-control" onchange="document.getElementById('filterForm').submit()">
+                        <option value="">-- Select Course --</option>
+                        <optgroup label="Courses">
+                            {% for course in courses %}
+                            <option value="course_{{ course.id }}" {% if selected_course_id == 'course_'|add:course.id|stringformat:"s" or selected_course_id == course.id|stringformat:"s" %}selected{% endif %}>
+                                {{ course.name }}
+                            </option>
+                            {% endfor %}
+                        </optgroup>
+                        {% if internships %}
+                        <optgroup label="Internships">
+                            {% for internship in internships %}
+                            <option value="internship_{{ internship.id }}" {% if selected_course_id == 'internship_'|add:internship.id|stringformat:"s" %}selected{% endif %}>
+                                {{ internship.title }}
+                            </option>
+                            {% endfor %}
+                        </optgroup>
+                        {% endif %}
+                    </select>
+                    <small class="text-muted">Required: Select a course to filter students for generation.</small>
+                </div>
 
                 {% if batches %}
                 <div class="form-group">
@@ -54,10 +80,13 @@
                     </select>
                 </div>
                 {% endif %}
+
+
             </form>
 
             <form method="post" id="generateForm">
                 {% csrf_token %}
+                <input type="hidden" name="course_id" value="{{ selected_course_id|default:'' }}">
                 <div class="form-group">
                     <label class="form-label" for="template_id">
                         Certificate Template <span style="color: var(--error);">*</span>
@@ -101,48 +130,58 @@
             </div>
             {% endif %}
         </div>
-        <div class="card-body" style="max-height: 400px; overflow-y: auto;">
-            {% if students %}
-            <div class="student-list">
-                {% for student in students %}
-                <label class="d-flex items-center gap-3 p-3"
-                    style="border-bottom: 1px solid var(--border-color); cursor: pointer;">
-                    <input type="checkbox" name="selected_students" value="{{ student.id }}" form="generateForm"
-                        class="student-checkbox" style="width: 18px; height: 18px;">
-                    <div class="user-avatar"
-                        style="width: 36px; height: 36px; font-size: 0.8rem; background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
-                        {{ student.username|slice:":1"|upper }}
-                    </div>
-                    <div style="flex: 1;">
-                        <div class="font-semibold">{{ student.get_full_name|default:student.username }}</div>
-                        <div class="text-muted" style="font-size: 0.75rem;">
-                            {{ student.email }}
-                            {% if student.batch %}
-                            <span
-                                style="margin-left: 8px; padding: 2px 8px; background: var(--primary-100); color: var(--primary-700); border-radius: 4px; font-size: 0.7rem;">
-                                Batch {{ student.batch }}
-                            </span>
-                            {% endif %}
-                        </div>
-                    </div>
-                </label>
-                {% endfor %}
-            </div>
-            {% elif selected_college_id %}
-            <div class="empty-state" style="padding: 40px 20px;">
-                <div class="empty-state-icon">
-                    <i class="fas fa-user-graduate"></i>
+        <div class="card-body" style="max-height: 480px; overflow-y: auto;">
+            {% if selected_college_id and not selected_course_id %}
+            <div class="empty-state" style="padding: 60px 20px;">
+                <div class="empty-state-icon" style="background-color: var(--primary-100); color: var(--primary-600);">
+                    <i class="fas fa-book-reader"></i>
                 </div>
-                <h3>No Students Found</h3>
-                <p class="text-muted">This institution has no registered students.</p>
+                <h3>Select a Course / Program</h3>
+                <p class="text-muted">Please select a specific course or internship to view eligible students.</p>
             </div>
+            {% elif selected_college_id and selected_course_id %}
+                {% if students %}
+                <div class="student-list">
+                    {% for student in students %}
+                    <label class="d-flex items-center gap-3 p-3"
+                        style="border-bottom: 1px solid var(--border-color); cursor: pointer;">
+                        <input type="checkbox" name="selected_students" value="{{ student.id }}" form="generateForm"
+                            class="student-checkbox" style="width: 18px; height: 18px;">
+                        <div class="user-avatar"
+                            style="width: 36px; height: 36px; font-size: 0.8rem; background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                            {{ student.username|slice:":1"|upper }}
+                        </div>
+                        <div style="flex: 1;">
+                            <div class="font-semibold">{{ student.get_full_name|default:student.username }}</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">
+                                {{ student.email }}
+                                {% if student.batch %}
+                                <span
+                                    style="margin-left: 8px; padding: 2px 8px; background: var(--primary-100); color: var(--primary-700); border-radius: 4px; font-size: 0.7rem;">
+                                    Batch {{ student.batch }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state" style="padding: 60px 20px;">
+                    <div class="empty-state-icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <h3>No Students Found</h3>
+                    <p class="text-muted">No students with approved applications found for this selection.</p>
+                </div>
+                {% endif %}
             {% else %}
-            <div class="empty-state" style="padding: 40px 20px;">
+            <div class="empty-state" style="padding: 60px 20px;">
                 <div class="empty-state-icon">
                     <i class="fas fa-hand-pointer"></i>
                 </div>
-                <h3>Select an Institution</h3>
-                <p class="text-muted">Select an institution from the dropdown to view its students.</p>
+                <h3>Start Selection</h3>
+                <p class="text-muted">Select an institution and then a course to begin generating certificates.</p>
             </div>
             {% endif %}
         </div>
@@ -190,7 +229,10 @@
     function updateGenerateButton() {
         const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
         const templateSelected = document.getElementById('template_id').value !== '';
-        generateBtn.disabled = !(anyChecked && templateSelected);
+        // Check if course is selected (hidden input or select from other form)
+        const courseSelected = document.querySelector('select[name="course_id"]') ? document.querySelector('select[name="course_id"]').value !== '' : false;
+        
+        generateBtn.disabled = !(anyChecked && templateSelected && courseSelected);
     }
 
     if (selectAll) {
