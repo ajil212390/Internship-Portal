@@ -1,0 +1,164 @@
+{% extends "admin/custom_base.html" %}
+{% block title %}All Certificates{% endblock %}
+{% block page_title %}Managed Certificates{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-between items-center mb-6">
+    <div class="d-flex items-center gap-2">
+        <a href="{% url 'admin_dashboard' %}" class="text-muted" style="font-size: 0.875rem;">
+            <i class="fas fa-th-large"></i> Dashboard
+        </a>
+        <i class="fas fa-chevron-right text-muted" style="font-size: 0.75rem;"></i>
+        <span style="font-size: 0.875rem;">Certificates</span>
+    </div>
+    <div class="d-flex gap-4">
+        <button type="button" onclick="submitBulkGeneration()" class="btn btn-success" id="bulkGenerateBtn" style="display: none;">
+            <i class="fas fa-check-circle"></i> Approve & Issue Selected
+        </button>
+    </div>
+</div>
+
+<form id="bulkCertForm" method="POST" action="{% url 'generate_certs' %}">
+    {% csrf_token %}
+    <!-- Hidden inputs for bulk generation requirements -->
+    <input type="hidden" name="template_id" value="{{ templates.0.id|default:'1' }}">
+    
+    <div class="card">
+        <div class="card-header d-flex justify-between items-center">
+            <h3 class="card-title"><i class="fas fa-certificate" style="margin-right: 8px;"></i>Certificate Records</h3>
+            <div class="badge badge-info">{{ certificates|length }} Total</div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;">
+                                <input type="checkbox" id="selectAllCerts" onclick="toggleAllCheckboxes(this)">
+                            </th>
+                            <th>Certificate ID</th>
+                            <th>Student</th>
+                            <th>Program</th>
+                            <th>Status</th>
+                            <th>Approved By</th>
+                            <th>Issued Date</th>
+                            <th style="text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cert in certificates %}
+                        <tr>
+                            <td>
+                                {% if cert.status == 'APPROVED' or cert.status == 'PENDING' %}
+                                    <input type="checkbox" name="selected_students" value="{{ cert.application.student.id }}" class="cert-checkbox" onchange="updateBulkBtn()">
+                                    <!-- We also need to tell the generator which program type/id this is -->
+                                    <input type="hidden" name="course_id_{{ cert.application.student.id }}" value="{% if cert.application.course %}course_{{ cert.application.course.id }}{% else %}internship_{{ cert.application.internship.id }}{% endif %}">
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if cert.certificate_number %}
+                                    <span class="font-mono text-xs font-bold text-primary">{{ cert.certificate_number }}</span>
+                                {% else %}
+                                    <span class="text-muted text-xs">Not Generated</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="font-semibold">{{ cert.application.student.get_full_name|default:cert.application.student.username }}</div>
+                                <div class="text-muted text-xs">{{ cert.application.student.email }}</div>
+                            </td>
+                            <td>
+                                <div class="font-medium">{{ cert.application.program_name }}</div>
+                                <div class="text-muted text-xs">{{ cert.application.program_type|title }}</div>
+                            </td>
+                            <td>
+                                <span class="badge 
+                                    {% if cert.status == 'ISSUED' %}badge-success
+                                    {% elif cert.status == 'APPROVED' %}badge-info
+                                    {% elif cert.status == 'PENDING' %}badge-warning
+                                    {% else %}badge-error{% endif %}">
+                                    {{ cert.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if cert.approved_by %}
+                                    <div class="text-xs">
+                                        <i class="fas fa-user-check text-success"></i> {{ cert.approved_by.username }}
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted text-xs">System</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="text-xs">{{ cert.issued_date|date:"M d, Y"|default:"-" }}</span>
+                            </td>
+                            <td style="text-align: right;">
+                                <div class="d-flex gap-2 justify-end">
+                                    {% if cert.status == 'ISSUED' %}
+                                        <span class="text-success text-xs font-semibold">
+                                            <i class="fas fa-check-circle"></i> Ready for Student
+                                        </span>
+                                    {% elif cert.status == 'APPROVED' or cert.status == 'PENDING' %}
+                                        <a href="{% url 'approve_certificate' cert.id %}" class="btn btn-success btn-sm" title="Approve & Issue">
+                                            <i class="fas fa-check"></i> Approve
+                                        </a>
+                                    {% endif %}
+                                    {% if cert.status == 'ISSUED' %}
+                                    <a href="{% url 'regenerate_certificate' cert.id %}" class="btn btn-warning btn-sm" title="Revoke">
+                                         <i class="fas fa-sync-alt"></i> Revoke
+                                     </a>
+                                    {% endif %}
+                                     <button type="button" 
+                                             onclick="showDeleteModal('{% url 'delete_certificate' cert.id %}', 'Certificate for {{ cert.application.student.username }}')" 
+                                             class="btn btn-danger btn-sm" 
+                                             title="Delete">
+                                         <i class="fas fa-trash"></i> Delete
+                                     </button>
+                                 </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8">
+                                <div style="padding: 80px 20px; text-align: center;">
+                                    <div style="width: 80px; height: 80px; background: #f1f5f9; color: #94a3b8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 20px;">
+                                        <i class="fas fa-file-invoice"></i>
+                                    </div>
+                                    <h3 style="color: #475569; font-size: 1.25rem; font-weight: 600; margin-bottom: 8px;">No Certificate Requests</h3>
+                                    <p style="color: #64748b; max-width: 400px; margin: 0 auto;">There are no pending or approved certificate requests from coordinators at this moment.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+function toggleAllCheckboxes(master) {
+    const checkboxes = document.getElementsByClassName('cert-checkbox');
+    for (let i = 0; i < checkboxes.length; i++) {
+        checkboxes[i].checked = master.checked;
+    }
+    updateBulkBtn();
+}
+
+function updateBulkBtn() {
+    const checkboxes = document.querySelectorAll('.cert-checkbox:checked');
+    const btn = document.getElementById('bulkGenerateBtn');
+    btn.style.display = checkboxes.length > 0 ? 'block' : 'none';
+}
+
+function submitBulkGeneration() {
+    const form = document.getElementById('bulkCertForm');
+    form.submit();
+    
+    // Refresh the page after a short delay so the status updates
+    setTimeout(() => {
+        window.location.reload();
+    }, 2000);
+}
+</script>
+{% endblock %}

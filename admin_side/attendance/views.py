@@ -35,24 +35,51 @@ def mark_attendance(request, application_id):
     
     if request.method == 'POST':
         date = request.POST.get('date')
+        session = request.POST.get('session', 'MORNING')
         status = request.POST.get('status', 'PRESENT')
         remarks = request.POST.get('remarks', '')
         
-        attendance, created = Attendance.objects.update_or_create(
-            application=application,
-            date=date,
-            defaults={
-                'status': status,
-                'remarks': remarks,
-                'marked_by': request.user
-            }
-        )
-        messages.success(request, f'Attendance marked successfully for {date}')
+        if not date:
+            messages.error(request, 'Please select a date.')
+            return redirect('attendance_by_application', application_id=application_id)
+        
+        # Date locking logic
+        try:
+            today = timezone.now().date()
+            mark_date = timezone.datetime.strptime(date, '%Y-%m-%d').date()
+            if mark_date < today:
+                messages.error(request, 'Attendance marking for past dates is locked.')
+                return redirect('attendance_by_application', application_id=application_id)
+        except (ValueError, TypeError):
+            pass # Fallback to Django's own validation if strptime fails
+        
+        if session not in ['MORNING', 'EVENING']:
+            messages.error(request, 'Invalid session type.')
+            return redirect('attendance_by_application', application_id=application_id)
+        
+        try:
+            attendance, created = Attendance.objects.update_or_create(
+                application=application,
+                date=date,
+                session=session,
+                defaults={
+                    'status': status,
+                    'remarks': remarks,
+                    'marked_by': request.user
+                }
+            )
+            action = 'created' if created else 'updated'
+            messages.success(request, f'Attendance {action} successfully for {date} ({session})')
+        except Exception as e:
+            messages.error(request, f'Error marking attendance: {str(e)}')
+        
         return redirect('attendance_by_application', application_id=application_id)
     
     return render(request, 'admin/mark_attendance.html', {
         'application': application,
-        'today': timezone.now().date()
+        'today': timezone.now().date(),
+        'status_choices': Attendance.STATUS_CHOICES,
+        'session_choices': Attendance.SESSION_CHOICES,
     })
 
 

@@ -1,27 +1,27 @@
 {% extends "admin/custom_base.html" %}
-{% block title %}Institutions{% endblock %}
-{% block page_title %}Manage Institutions{% endblock %}
+{% block title %}Companies{% endblock %}
+{% block page_title %}Manage Companies{% endblock %}
 
 {% block content %}
 <!-- Page Header -->
 <div class="d-flex justify-between items-center mb-6">
     <div>
-        <p class="text-muted">Manage all registered colleges and their coordinators</p>
+        <p class="text-muted">Manage all partner companies and their HR coordinators</p>
     </div>
     <a href="{% url 'add_institution' %}" class="btn btn-primary">
         <i class="fas fa-plus"></i>
-        Add Institution
+        Add Company
     </a>
 </div>
 
 <!-- Institutions Table Card -->
 <div class="card">
     <div class="card-header">
-        <h3 class="card-title">All Institutions</h3>
+        <h3 class="card-title">All Companies</h3>
         <div class="d-flex gap-4">
             <div class="search-box" style="width: 220px;">
                 <i class="fas fa-search"></i>
-                <input type="text" placeholder="Search institutions..." id="searchInput">
+                <input type="text" placeholder="Search companies..." id="searchInput">
             </div>
         </div>
     </div>
@@ -30,9 +30,9 @@
             <table class="data-table" id="institutionsTable">
                 <thead>
                     <tr>
-                        <th>College Name</th>
+                        <th>Company Name</th>
                         <th>Location</th>
-                        <th>Principal</th>
+                        <th>HR Coordinator</th>
                         <th>Contact</th>
                         <th>Status</th>
                         <th>Actions</th>
@@ -63,13 +63,18 @@
                             </span>
                         </td>
                         <td>
-                            {% if i.principal_name %}
-                                <div class="font-semibold">{{ i.principal_name }}</div>
-                                {% if i.principal_email %}
+                            {% if i.hr_coordinator_name %}
+                                <div class="font-semibold">{{ i.hr_coordinator_name }}</div>
+                                {% if i.hr_coordinator_email %}
                                 <div class="text-muted" style="font-size: 0.75rem;">
-                                    <i class="fas fa-envelope"></i> {{ i.principal_email }}
+                                    <i class="fas fa-envelope"></i> {{ i.hr_coordinator_email }}
                                 </div>
                                 {% endif %}
+                            {% elif i.coordinator %}
+                                <div class="font-semibold">{{ i.coordinator.get_full_name|default:i.coordinator.username }}</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">
+                                    <i class="fas fa-envelope"></i> {{ i.coordinator.email }}
+                                </div>
                             {% else %}
                                 <span class="text-muted">Not Specified</span>
                             {% endif %}
@@ -81,13 +86,13 @@
                                     {{ i.phone }}
                                 </div>
                             {% endif %}
-                            {% if i.principal_phone %}
+                            {% if i.hr_coordinator_phone %}
                                 <div class="d-flex items-center gap-2 mt-1" style="font-size: 0.75rem;">
                                     <i class="fas fa-user text-muted"></i>
-                                    {{ i.principal_phone }}
+                                    {{ i.hr_coordinator_phone }}
                                 </div>
                             {% endif %}
-                            {% if not i.phone and not i.principal_phone %}
+                            {% if not i.phone and not i.hr_coordinator_phone %}
                                 <span class="text-muted">--</span>
                             {% endif %}
                         </td>
@@ -122,11 +127,11 @@
                                 <div class="empty-state-icon">
                                     <i class="fas fa-building"></i>
                                 </div>
-                                <h3>No Institutions Found</h3>
-                                <p>Get started by adding your first institution</p>
+                                <h3>No Companies Found</h3>
+                                <p>Get started by adding your first company</p>
                                 <a href="{% url 'add_institution' %}" class="btn btn-primary">
                                     <i class="fas fa-plus"></i>
-                                    Add Institution
+                                    Add Company
                                 </a>
                             </div>
                         </td>

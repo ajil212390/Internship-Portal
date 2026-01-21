@@ -46,17 +46,21 @@
                         <option value="">-- Select Course --</option>
                         <optgroup label="Courses">
                             {% for course in courses %}
-                            <option value="course_{{ course.id }}" {% if selected_course_id == 'course_'|add:course.id|stringformat:"s" or selected_course_id == course.id|stringformat:"s" %}selected{% endif %}>
+                            {% with c_val="course_"|add:course.id|stringformat:"s" %}
+                            <option value="{{ c_val }}" {% if selected_course_id == c_val or selected_course_id == course.id|stringformat:"s" %}selected{% endif %}>
                                 {{ course.name }}
                             </option>
+                            {% endwith %}
                             {% endfor %}
                         </optgroup>
                         {% if internships %}
                         <optgroup label="Internships">
                             {% for internship in internships %}
-                            <option value="internship_{{ internship.id }}" {% if selected_course_id == 'internship_'|add:internship.id|stringformat:"s" %}selected{% endif %}>
+                            {% with i_val="internship_"|add:internship.id|stringformat:"s" %}
+                            <option value="{{ i_val }}" {% if selected_course_id == i_val %}selected{% endif %}>
                                 {{ internship.title }}
                             </option>
+                            {% endwith %}
                             {% endfor %}
                         </optgroup>
                         {% endif %}
@@ -64,22 +68,7 @@
                     <small class="text-muted">Required: Select a course to filter students for generation.</small>
                 </div>
 
-                {% if batches %}
-                <div class="form-group">
-                    <label class="form-label" for="batch">
-                        Select Batch (Optional)
-                    </label>
-                    <select id="batch" name="batch" class="form-control"
-                        onchange="document.getElementById('filterForm').submit()">
-                        <option value="">-- All Batches --</option>
-                        {% for batch in batches %}
-                        <option value="{{ batch }}" {% if selected_batch == batch %}selected{% endif %}>
-                            Batch {{ batch }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                {% endif %}
+
 
 
             </form>
@@ -131,36 +120,40 @@
             {% endif %}
         </div>
         <div class="card-body" style="max-height: 480px; overflow-y: auto;">
-            {% if selected_college_id and not selected_course_id %}
-            <div class="empty-state" style="padding: 60px 20px;">
-                <div class="empty-state-icon" style="background-color: var(--primary-100); color: var(--primary-600);">
-                    <i class="fas fa-book-reader"></i>
-                </div>
-                <h3>Select a Course / Program</h3>
-                <p class="text-muted">Please select a specific course or internship to view eligible students.</p>
-            </div>
-            {% elif selected_college_id and selected_course_id %}
+            {% if selected_college_id and selected_course_id and selected_course_id != "" and selected_course_id != "None" %}
                 {% if students %}
                 <div class="student-list">
                     {% for student in students %}
                     <label class="d-flex items-center gap-3 p-3"
-                        style="border-bottom: 1px solid var(--border-color); cursor: pointer;">
+                        style="border-bottom: 1px solid var(--border-color); cursor: pointer; {% if not student.is_eligible %}opacity: 0.7;{% endif %}">
+                        
                         <input type="checkbox" name="selected_students" value="{{ student.id }}" form="generateForm"
-                            class="student-checkbox" style="width: 18px; height: 18px;">
+                            class="student-checkbox" style="width: 18px; height: 18px;"
+                            {% if not student.is_eligible %}disabled{% endif %}>
+                        
                         <div class="user-avatar"
-                            style="width: 36px; height: 36px; font-size: 0.8rem; background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                            style="width: 36px; height: 36px; font-size: 0.8rem; background: {% if student.is_eligible %}linear-gradient(135deg, #8b5cf6, #7c3aed){% else %}#cbd5e1{% endif %}">
                             {{ student.username|slice:":1"|upper }}
                         </div>
+                        
                         <div style="flex: 1;">
-                            <div class="font-semibold">{{ student.get_full_name|default:student.username }}</div>
+                            <div class="d-flex items-center gap-2">
+                                <span class="font-semibold">{{ student.get_full_name|default:student.username }}</span>
+                                {% if student.app_status == 'APPROVED' %}
+                                    <span class="badge badge-success" style="font-size: 0.65rem; padding: 1px 6px;">Application Approved</span>
+                                {% endif %}
+                                
+                                {% if student.cert_status == 'APPROVED' %}
+                                    <span class="badge" style="font-size: 0.65rem; padding: 1px 6px; background: #8b5cf6; color: white;">Approved by Coordinator</span>
+                                {% elif student.cert_status == 'ISSUED' %}
+                                    <span class="badge" style="font-size: 0.65rem; padding: 1px 6px; background: #10b981; color: white;">Issued</span>
+                                {% elif student.cert_status == 'PENDING' %}
+                                    <span class="badge" style="font-size: 0.65rem; padding: 1px 6px; background: #f59e0b; color: white;">Pending Coordinator</span>
+                                {% endif %}
+                            </div>
                             <div class="text-muted" style="font-size: 0.75rem;">
                                 {{ student.email }}
-                                {% if student.batch %}
-                                <span
-                                    style="margin-left: 8px; padding: 2px 8px; background: var(--primary-100); color: var(--primary-700); border-radius: 4px; font-size: 0.7rem;">
-                                    Batch {{ student.batch }}
-                                </span>
-                                {% endif %}
+
                             </div>
                         </div>
                     </label>
@@ -172,9 +165,17 @@
                         <i class="fas fa-user-graduate"></i>
                     </div>
                     <h3>No Students Found</h3>
-                    <p class="text-muted">No students with approved applications found for this selection.</p>
+                    <p class="text-muted">No students with applications found for this selection.</p>
                 </div>
                 {% endif %}
+            {% elif selected_college_id %}
+            <div class="empty-state" style="padding: 60px 20px;">
+                <div class="empty-state-icon" style="background-color: var(--primary-100); color: var(--primary-600);">
+                    <i class="fas fa-book-reader"></i>
+                </div>
+                <h3>Select a Course / Program</h3>
+                <p class="text-muted">Please select a specific course or internship to view eligible students.</p>
+            </div>
             {% else %}
             <div class="empty-state" style="padding: 60px 20px;">
                 <div class="empty-state-icon">

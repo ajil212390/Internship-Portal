@@ -1,306 +1,567 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Register | Smart Internship</title>
-    
+
     <!-- Google Fonts - Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    
-    <!-- Custom CSS -->
+
+    <!-- Vanta.js Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/tengbao/vanta@master/dist/vanta.birds.min.js"></script>
+
     {% load static %}
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="stylesheet" href="{% static 'css/animations.css' %}">
-    
     <style>
-        /* Registration Page Specific Styles */
-        .register-page {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, var(--gray-900) 0%, var(--gray-800) 50%, var(--primary-900) 100%);
-            padding: var(--space-6);
+        :root {
+            --primary-blue: #e7f1ff;
+            --brand-blue: #0066ff;
+            --text-dark: #1a1a1a;
+            --text-muted: #666666;
+            --border-color: #e5e7eb;
+            --bg-light: #ffffff;
         }
 
-        .register-card {
-            width: 100%;
-            max-width: 500px;
-            background: var(--bg-primary);
-            border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-xl);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            height: 100vh;
+            display: flex;
             overflow: hidden;
         }
 
-        .register-header {
-            background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
-            padding: var(--space-6);
-            text-align: center;
+        .login-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
         }
 
-        .register-logo {
-            width: 60px;
-            height: 60px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: var(--radius-lg);
+        /* Form Side */
+        .form-side {
+            flex: 0 0 55%;
+            display: flex;
+            flex-direction: column;
+            padding: 40px 8%;
+            background: white;
+            position: relative;
+            z-index: 10;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #e5e7eb transparent;
+        }
+
+        .form-side>* {
+            position: relative;
+            z-index: 2;
+        }
+
+        #vanta-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--text-dark);
+            margin-bottom: 30px;
+        }
+
+        .logo-box {
+            width: 32px;
+            height: 32px;
+            background-color: var(--brand-blue);
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto var(--space-3);
-            font-size: 1.75rem;
             color: white;
+            font-size: 1rem;
         }
 
-        .register-header h1 {
-            color: white;
-            font-size: 1.25rem;
-            margin-bottom: var(--space-1);
-        }
-
-        .register-header p {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 0.875rem;
-        }
-
-        /* Register Form */
-        .register-form {
-            padding: var(--space-6);
-        }
-
-        .register-form .form-group {
-            margin-bottom: var(--space-4);
-        }
-
-        .register-form .form-label {
-            display: block;
-            margin-bottom: var(--space-2);
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--text-primary);
-        }
-
-        .register-form .form-control {
+        .login-box {
+            max-width: 500px;
             width: 100%;
-            padding: var(--space-3) var(--space-4);
-            font-size: 0.9375rem;
-            border: 1px solid var(--border-medium);
-            border-radius: var(--radius-md);
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            transition: all var(--transition-fast);
+            margin: 0 0;
         }
 
-        .register-form .form-control:focus {
-            outline: none;
-            border-color: var(--primary-500);
-            box-shadow: 0 0 0 3px rgba(52, 117, 215, 0.15);
+        .login-box h1 {
+            font-size: 2rem;
+            margin-bottom: 25px;
+            font-weight: 700;
+            color: var(--text-dark);
         }
 
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: var(--space-4);
+            gap: 15px;
         }
 
-        .error-list {
-            background: var(--error-light);
-            color: var(--error-dark);
-            padding: var(--space-3) var(--space-4);
-            border-radius: var(--radius-md);
-            margin-bottom: var(--space-4);
-            font-size: 0.875rem;
+        .form-group {
+            margin-bottom: 15px;
         }
 
-        .error-list ul {
-            margin: 0;
-            padding-left: var(--space-4);
-        }
-
-        .error-list li {
-            margin-bottom: var(--space-1);
-        }
-
-        .btn-lg {
-            padding: var(--space-4) var(--space-6);
-            font-size: 1rem;
-        }
-
-        .w-full {
-            width: 100%;
-        }
-
-        .register-footer {
-            padding: var(--space-5) var(--space-6);
-            background: var(--bg-secondary);
-            text-align: center;
-            border-top: 1px solid var(--border-light);
-        }
-
-        .register-footer p {
+        .form-label {
+            display: block;
+            font-size: 0.8125rem;
             color: var(--text-muted);
-            font-size: 0.875rem;
+            margin-bottom: 6px;
+            font-weight: 500;
         }
 
-        .register-footer a {
-            color: var(--primary-600);
+        .form-control {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.9375rem;
+            transition: all 0.2s ease;
+            color: var(--text-dark);
+            background: #fdfdfd;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--brand-blue);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(0, 102, 255, 0.1);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--brand-blue);
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #ffffff;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .btn-submit:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+            background-color: #0052cc;
+        }
+
+        .form-footer {
+            margin-top: 30px;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            padding-bottom: 40px;
+        }
+
+        .form-footer a {
+            color: var(--brand-blue);
+            text-decoration: none;
             font-weight: 500;
+        }
+
+        /* Right Side: Carousel */
+        .image-side {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            transition: transform 1.2s cubic-bezier(0.65, 0, 0.35, 1);
+            transform: translateX(100%);
+            display: flex;
+            align-items: flex-end;
+            padding: 80px 60px;
+            color: white;
+        }
+
+        .slide.active {
+            transform: translateX(0);
+            z-index: 2;
+        }
+
+        .slide.prev {
+            transform: translateX(-100%);
+            z-index: 1;
+        }
+
+        .slide::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.7));
+        }
+
+        .slide-content {
+            position: relative;
+            z-index: 5;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease 0.6s;
+        }
+
+        .slide.active .slide-content {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .slide-content h2 {
+            font-size: 2.75rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .slide-content p {
+            font-size: 1.15rem;
+            line-height: 1.6;
+            opacity: 0.9;
+            max-width: 500px;
+        }
+
+        .carousel-nav {
+            position: absolute;
+            bottom: 60px;
+            left: 60px;
+            display: flex;
+            gap: 12px;
+            z-index: 10;
+        }
+
+        .dot {
+            width: 32px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .dot.active {
+            background: white;
+            width: 48px;
+        }
+
+        /* Snackbar Logic */
+        #snackbar {
+            visibility: hidden;
+            min-width: 320px;
+            background-color: #1a1a1a;
+            color: #fff;
+            text-align: left;
+            border-radius: 12px;
+            padding: 16px 20px;
+            position: fixed;
+            z-index: 1000;
+            left: 40px;
+            bottom: -100px;
+            font-size: 0.95rem;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            border-left: 5px solid transparent;
+        }
+
+        #snackbar.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 40px;
+        }
+
+        #snackbar.error {
+            border-left-color: #ff4d4f;
+        }
+
+        #snackbar i {
+            font-size: 1.25rem;
+        }
+
+        .snackbar-content {
+            flex: 1;
+        }
+
+        .snackbar-close {
+            cursor: pointer;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+
+        .snackbar-close:hover {
+            opacity: 1;
+        }
+
+        @media (max-width: 992px) {
+            .image-side {
+                display: none;
+            }
+
+            .form-side {
+                flex: 1;
+                padding: 40px;
+            }
         }
     </style>
 </head>
+
 <body>
-    <div class="register-page">
-        <div class="register-card">
-            <div class="register-header">
-                <div class="register-logo">
-                    <i class="fas fa-user-graduate"></i>
+    <div class="login-container">
+        <!-- Form Side -->
+        <div class="form-side" id="vanta-target">
+            <div id="vanta-bg"></div>
+            <div class="brand-logo">
+                <div class="logo-box">
+                    <i class="fas fa-graduation-cap"></i>
                 </div>
-                <h1>Student Registration</h1>
-                <p>Create your account to get started</p>
+                Smart Internship
             </div>
-            
-            <form method="post" action="" class="register-form">
-                {% csrf_token %}
-                
-                {% if errors %}
-                <div class="error-list">
-                    <ul>
-                        {% for error in errors %}
-                        <li>{{ error }}</li>
-                        {% endfor %}
-                    </ul>
+
+            <div class="login-box">
+                <h1>Student Registration</h1>
+
+                <div id="snackbar">
+                    <i id="snackbar-icon" class="fas"></i>
+                    <div class="snackbar-content" id="snackbar-msg"></div>
+                    <i class="fas fa-times snackbar-close" onclick="hideSnackbar()"></i>
                 </div>
-                {% endif %}
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label" for="first_name">
-                            First Name
-                        </label>
-                        <input type="text" 
-                               id="first_name" 
-                               name="first_name" 
-                               class="form-control" 
-                               placeholder="First name"
-                               value="{{ form_data.first_name|default:'' }}">
+
+                <form method="post" action="">
+                    {% csrf_token %}
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">First Name</label>
+                            <input type="text" name="first_name" class="form-control" placeholder="First Name"
+                                value="{{ form_data.first_name|default:'' }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" name="last_name" class="form-control" placeholder="Last Name"
+                                value="{{ form_data.last_name|default:'' }}">
+                        </div>
                     </div>
-                    
+
                     <div class="form-group">
-                        <label class="form-label" for="last_name">
-                            Last Name
-                        </label>
-                        <input type="text" 
-                               id="last_name" 
-                               name="last_name" 
-                               class="form-control" 
-                               placeholder="Last name"
-                               value="{{ form_data.last_name|default:'' }}">
+                        <label class="form-label">Username *</label>
+                        <input type="text" name="username" class="form-control" placeholder="Choose username" required
+                            value="{{ form_data.username|default:'' }}">
                     </div>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="username">
-                        <i class="fas fa-user" style="margin-right: 8px;"></i>
-                        Username *
-                    </label>
-                    <input type="text" 
-                           id="username" 
-                           name="username" 
-                           class="form-control" 
-                           placeholder="Choose a username" 
-                           required
-                           value="{{ form_data.username|default:'' }}">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="email">
-                        <i class="fas fa-envelope" style="margin-right: 8px;"></i>
-                        Email Address *
-                    </label>
-                    <input type="email" 
-                           id="email" 
-                           name="email" 
-                           class="form-control" 
-                           placeholder="Enter your email" 
-                           required
-                           value="{{ form_data.email|default:'' }}">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="phone">
-                        <i class="fas fa-phone" style="margin-right: 8px;"></i>
-                        Phone Number
-                    </label>
-                    <input type="tel" 
-                           id="phone" 
-                           name="phone" 
-                           class="form-control" 
-                           placeholder="Enter your phone number"
-                           value="{{ form_data.phone|default:'' }}">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="institution">
-                        <i class="fas fa-building" style="margin-right: 8px;"></i>
-                        Institution *
-                    </label>
-                    <select id="institution" 
-                            name="institution" 
-                            class="form-control" 
-                            required>
-                        <option value="">Select your institution</option>
-                        {% for inst in institutions %}
-                        <option value="{{ inst.id }}" {% if form_data.institution == inst.id|stringformat:"s" %}selected{% endif %}>
-                            {{ inst.name }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                
-                <div class="form-row">
+
                     <div class="form-group">
-                        <label class="form-label" for="password">
-                            <i class="fas fa-lock" style="margin-right: 8px;"></i>
-                            Password *
-                        </label>
-                        <input type="password" 
-                               id="password" 
-                               name="password" 
-                               class="form-control" 
-                               placeholder="Min 6 characters" 
-                               required>
+                        <label class="form-label">Email Address *</label>
+                        <input type="email" name="email" class="form-control" placeholder="Email Address" required
+                            value="{{ form_data.email|default:'' }}">
                     </div>
-                    
+
                     <div class="form-group">
-                        <label class="form-label" for="confirm_password">
-                            <i class="fas fa-lock" style="margin-right: 8px;"></i>
-                            Confirm Password *
-                        </label>
-                        <input type="password" 
-                               id="confirm_password" 
-                               name="confirm_password" 
-                               class="form-control" 
-                               placeholder="Confirm password" 
-                               required>
+                        <label class="form-label">Qualification *</label>
+                        <select name="qualification" class="form-control" required>
+                            <option value="" disabled selected>-- Select Qualification --</option>
+                            <option value="B.Tech">B.Tech</option>
+                            <option value="M.Tech">M.Tech</option>
+                            <option value="B.Sc">B.Sc</option>
+                            <option value="M.Sc">M.Sc</option>
+                            <option value="MBA">MBA</option>
+                            <option value="MCA">MCA</option>
+                            <option value="PhD">PhD</option>
+                            <option value="Diploma">Diploma</option>
+                            <option value="High School">High School</option>
+                        </select>
                     </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" name="phone" class="form-control" placeholder="Phone Number"
+                            value="{{ form_data.phone|default:'' }}">
+                    </div>
+
+
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Password *</label>
+                            <input type="password" name="password" class="form-control" placeholder="Min 6 characters"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Confirm Password *</label>
+                            <input type="password" name="confirm_password" class="form-control"
+                                placeholder="Repeat password" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Create Account</button>
+                </form>
+            </div>
+
+            <div class="form-footer">
+                Already have an account? <a href="{% url 'login' %}">Sign In</a>
+            </div>
+        </div>
+
+        <!-- Image Side with Stacked Carousel -->
+        <div class="image-side">
+            <!-- Slide 1 -->
+            <div class="slide active"
+                style="background-image: url('https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&q=80&w=1470');">
+                <div class="slide-content">
+                    <h2>Step into your future.</h2>
+                    <p>Register today and gain access to premium internship opportunities and skill training modules.</p>
                 </div>
-                
-                <button type="submit" class="btn btn-primary btn-lg w-full" style="margin-top: var(--space-4);">
-                    <i class="fas fa-user-plus"></i>
-                    Create Account
-                </button>
-            </form>
-            
-            <div class="register-footer">
-                <p>Already have an account? <a href="{% url 'login' %}">Sign In</a></p>
+            </div>
+            <!-- Slide 2 -->
+            <div class="slide"
+                style="background-image: url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=1471');">
+                <div class="slide-content">
+                    <h2>Learning without limits.</h2>
+                    <p>Join a community where practical knowledge meets industry standards and professional growth.</p>
+                </div>
+            </div>
+            <!-- Slide 3 -->
+            <div class="slide"
+                style="background-image: url('https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=1470');">
+                <div class="slide-content">
+                    <h2>Achieve your goals.</h2>
+                    <p>Our platform handles everything from application to certification, so you can focus on mastering
+                        your skills.</p>
+                </div>
+            </div>
+
+            <div class="carousel-nav">
+                <div class="dot active" onclick="goToSlide(0)"></div>
+                <div class="dot" onclick="goToSlide(1)"></div>
+                <div class="dot" onclick="goToSlide(2)"></div>
             </div>
         </div>
     </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const dots = document.querySelectorAll('.dot');
+        const totalSlides = slides.length;
+
+        function updateCarousel(prevIndex) {
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active', 'prev');
+                if (index === currentSlide) {
+                    slide.classList.add('active');
+                } else if (index === prevIndex) {
+                    slide.classList.add('prev');
+                }
+            });
+
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentSlide);
+            });
+        }
+
+        function nextSlide() {
+            const prevIndex = currentSlide;
+            currentSlide = (currentSlide + 1) % totalSlides;
+            updateCarousel(prevIndex);
+        }
+
+        function goToSlide(index) {
+            if (index === currentSlide) return;
+            const prevIndex = currentSlide;
+            currentSlide = index;
+            updateCarousel(prevIndex);
+            clearInterval(slideInterval);
+            slideInterval = setInterval(nextSlide, 5000);
+        }
+
+        let slideInterval = setInterval(nextSlide, 5000);
+
+        // Snackbar Functionality
+        function showSnackbar(message, type = 'info') {
+            if (!message || message.trim() === "" || message === "None") return;
+
+            const snackbar = document.getElementById("snackbar");
+            const msgEl = document.getElementById("snackbar-msg");
+            const iconEl = document.getElementById("snackbar-icon");
+
+            msgEl.textContent = message;
+            snackbar.className = "show " + type;
+
+            if (type === 'error') iconEl.className = "fas fa-exclamation-circle";
+            else iconEl.className = "fas fa-info-circle";
+
+            setTimeout(function () {
+                hideSnackbar();
+            }, 6000);
+        }
+
+        function hideSnackbar() {
+            const snackbar = document.getElementById("snackbar");
+            snackbar.className = snackbar.className.replace("show", "");
+        }
+
+        window.onload = function () {
+            // Initialize Vanta BIRDS
+            VANTA.BIRDS({
+                el: "#vanta-target",
+                mouseControls: true,
+                touchControls: true,
+                gyroControls: false,
+                minHeight: 200.00,
+                minWidth: 200.00,
+                scale: 1.00,
+                scaleMobile: 1.00,
+                backgroundColor: 0xffffff,
+                color1: 0x0066ff,
+                color2: 0x5a9eff,
+                birdSize: 1.50,
+                wingSpan: 20.00,
+                separation: 50.00,
+                alignment: 50.00,
+                cohesion: 50.00,
+                quantity: 3.00
+            });
+
+            // Handle errors from Django context
+            {% if errors %}
+                {% for error in errors %}
+                    showSnackbar("{{ error|escapejs }}", "error");
+                {% endfor %}
+            {% endif %}
+        };
+    </script>
 </body>
+
 </html>

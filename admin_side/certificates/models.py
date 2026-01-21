@@ -45,6 +45,13 @@ class Certificate(models.Model):
     )
     issued_date = models.DateField(null=True, blank=True)
     certificate_number = models.CharField(max_length=50, unique=True, null=True, blank=True)
+    template = models.ForeignKey(
+        'CertificateTemplate',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='certificates'
+    )
     remarks = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

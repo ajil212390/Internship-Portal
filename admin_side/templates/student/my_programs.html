@@ -1,0 +1,89 @@
+{% extends 'student/base.html' %}
+
+{% block title %}My Programs{% endblock %}
+{% block page_title %}My Enrolled Programs{% endblock %}
+
+{% block content %}
+<!-- Info Bar -->
+<div class="card" style="margin-bottom: var(--space-6);">
+    <div class="card-body">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 style="margin-bottom: 4px;">My Active Programs</h3>
+                <p style="color: var(--text-secondary); font-size: 0.875rem;">Courses and internships you are currently participating in.</p>
+            </div>
+            <div class="badge badge-success" style="padding: 8px 16px; font-size: 1rem;">
+                {{ enrolled_programs|length }} Active
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Programs Grid -->
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: var(--space-6);">
+    {% for app in enrolled_programs %}
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <span class="tag" style="margin-bottom: var(--space-2);">{{ app.program_type }}</span>
+                <h3 class="card-title">{{ app.program_name }}</h3>
+            </div>
+        </div>
+        <div class="card-body">
+            <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <i class="fas fa-building" style="color: var(--text-muted); width: 20px;"></i>
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Company</div>
+                        <div style="font-weight: 600;">{% if app.course %}{{ app.course.institution.name }}{% else %}{{ app.internship.institution.name }}{% endif %}</div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <i class="fas fa-calendar-alt" style="color: var(--text-muted); width: 20px;"></i>
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Enrolled On</div>
+                        <div style="font-weight: 600;">{{ app.applied_at|date:"M d, Y" }}</div>
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <i class="fas fa-clock" style="color: var(--text-muted); width: 20px;"></i>
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Duration</div>
+                        <div style="font-weight: 600;">
+                            {% if app.course %}{{ app.course.duration_days }} Days{% else %}{{ app.internship.duration }} Days{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer" style="display: flex; gap: var(--space-3);">
+            {% if app.course %}
+            <a href="{% url 'student:program_detail' app.course.id %}?type=course" class="btn btn-secondary" style="flex: 1;">
+                <i class="fas fa-info-circle"></i> Details
+            </a>
+            {% else %}
+            <a href="{% url 'student:program_detail' app.internship.id %}?type=internship" class="btn btn-secondary" style="flex: 1;">
+                <i class="fas fa-info-circle"></i> Details
+            </a>
+            {% endif %}
+            <a href="{% url 'student:attendance' %}" class="btn btn-primary" style="flex: 1;">
+                <i class="fas fa-calendar-check"></i> Attendance
+            </a>
+        </div>
+    </div>
+    {% empty %}
+    <div style="grid-column: 1 / -1; text-align: center; padding: 60px;">
+        <div style="width: 100px; height: 100px; background: var(--bg-secondary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
+            <i class="fas fa-graduation-cap" style="font-size: 3rem; color: var(--text-muted);"></i>
+        </div>
+        <h3>No Enrolled Programs</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 24px;">You haven't been approved for any programs yet.</p>
+        <a href="{% url 'student:programs' %}" class="btn btn-primary">
+            <i class="fas fa-search"></i> Browse Programs
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -5,8 +5,11 @@
 
 {% block content %}
 <div class="card">
-    <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-briefcase" style="margin-right: 8px;"></i>Internships Assigned to Me</h3>
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 class="card-title"><i class="fas fa-briefcase" style="margin-right: 8px;"></i>Manage Internships</h3>
+        <a href="{% url 'coordinator:add_internship' %}" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus"></i> Add Internship
+        </a>
     </div>
     <div class="card-body" style="padding: 0;">
         {% if internships %}
@@ -21,6 +24,7 @@
                         <th>Enrolled</th>
                         <th>Pending</th>
                         <th>Status</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -59,6 +63,19 @@
                             {% else %}
                             <span class="badge badge-neutral">Inactive</span>
                             {% endif %}
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 5px;">
+                                <a href="{% url 'coordinator:applications' %}?program=internship&status=pending" class="btn btn-primary btn-sm" title="Review Applications">
+                                    <i class="fas fa-users-cog"></i>
+                                </a>
+                                <a href="{% url 'coordinator:edit_internship' internship.id %}" class="btn btn-warning btn-sm" title="Edit Internship">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'coordinator:delete_internship' internship.id %}" class="btn btn-danger btn-sm" title="Delete Internship" onclick="return confirm('Are you sure you want to delete this internship?')">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}

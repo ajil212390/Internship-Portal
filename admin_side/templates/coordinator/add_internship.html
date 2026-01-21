@@ -1,0 +1,96 @@
+{% extends 'coordinator/base.html' %}
+
+{% block title %}Add Internship{% endblock %}
+{% block page_title %}Add New Internship{% endblock %}
+
+{% block content %}
+<div class="d-flex items-center gap-2 mb-6">
+    <a href="{% url 'coordinator:internships' %}" class="text-muted" style="font-size: 0.875rem;">
+        <i class="fas fa-briefcase"></i> Internships
+    </a>
+    <i class="fas fa-chevron-right text-muted" style="font-size: 0.75rem;"></i>
+    <span style="font-size: 0.875rem;">Add New</span>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-plus-circle" style="color: var(--primary-500); margin-right: 8px;"></i>
+            Internship Details
+        </h3>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label" for="title">Internship Title <span style="color: var(--error);">*</span></label>
+                    <input type="text" id="title" name="title" class="form-control" placeholder="Enter internship title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="category">Category <span style="color: var(--error);">*</span></label>
+                    <select id="category" name="category" class="form-control" required>
+                        {% for code, name in categories %}
+                        <option value="{{ code }}">{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="description">Description</label>
+                <textarea id="description" name="description" class="form-control" rows="3" placeholder="Enter internship description"></textarea>
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label" for="duration">Duration (Days) <span style="color: var(--error);">*</span></label>
+                    <input type="number" id="duration" name="duration" class="form-control" value="30" min="1" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="max_students">Max Students</label>
+                    <input type="number" id="max_students" name="max_students" class="form-control" value="20" min="1">
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label" for="start_date">Start Date</label>
+                    <input type="date" id="start_date" name="start_date" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="end_date">End Date</label>
+                    <input type="date" id="end_date" name="end_date" class="form-control">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="eligibility">Eligibility Criteria</label>
+                <textarea id="eligibility" name="eligibility" class="form-control" rows="2" placeholder="Enter eligibility criteria"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="requirements">Requirements</label>
+                <textarea id="requirements" name="requirements" class="form-control" rows="2" placeholder="Enter requirements and eligibility"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="skills_gained">Skills to be Gained</label>
+                <textarea id="skills_gained" name="skills_gained" class="form-control" rows="2" placeholder="What skills will students learn?"></textarea>
+            </div>
+
+            <div class="d-flex gap-4 mt-6">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Internship
+                </button>
+                <a href="{% url 'coordinator:internships' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

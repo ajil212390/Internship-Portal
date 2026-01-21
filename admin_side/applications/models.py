@@ -18,8 +18,8 @@ class Application(models.Model):
         limit_choices_to={'role': 'STUDENT'},
         related_name='applications'
     )
-    course = models.ForeignKey(Course, null=True, blank=True, on_delete=models.SET_NULL)
-    internship = models.ForeignKey(Internship, null=True, blank=True, on_delete=models.SET_NULL)
+    course = models.ForeignKey(Course, null=True, blank=True, on_delete=models.CASCADE)
+    internship = models.ForeignKey(Internship, null=True, blank=True, on_delete=models.CASCADE)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
     applied_at = models.DateTimeField(auto_now_add=True)
     reviewed_at = models.DateTimeField(blank=True, null=True)

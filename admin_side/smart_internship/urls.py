@@ -26,7 +26,6 @@ urlpatterns = [
     path('', include('applications.urls')),
     path('', include('attendance.urls')),
     path('', include('certificates.urls')),
-    path('admin/batches/', include('batches.urls')),  # Batch management
     
     # Student URLs
     path('student/', include('accounts.student_urls')),

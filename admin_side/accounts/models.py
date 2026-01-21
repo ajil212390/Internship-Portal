@@ -5,7 +5,7 @@ from django.db import models
 class User(AbstractUser):
     ROLE_CHOICES = (
         ('ADMIN', 'Admin'),
-        ('COORDINATOR', 'Coordinator'),
+        ('COORDINATOR', 'HR Coordinator'),
         ('STUDENT', 'Student'),
     )
     APPROVAL_STATUS_CHOICES = (
@@ -24,14 +24,7 @@ class User(AbstractUser):
         blank=True,
         related_name='users'
     )
-    batch = models.ForeignKey(
-        'batches.Batch',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='students',
-        help_text='Batch this student belongs to (only for students)'
-    )
+    qualification = models.CharField(max_length=255, blank=True, null=True, help_text="Student's highest qualification")
     is_active = models.BooleanField(default=True)
     # Approval workflow fields
     approval_status = models.CharField(

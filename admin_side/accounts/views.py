@@ -9,7 +9,7 @@ from institutions.models import Institution
 
 
 def unified_login(request):
-    """Unified login for all roles: Student, Coordinator, Admin"""
+    """Truly role-based login: Detects role after authentication and redirects accordingly"""
     # If already logged in, redirect based on role
     if request.user.is_authenticated:
         return redirect_by_role(request.user)
@@ -19,49 +19,41 @@ def unified_login(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-        selected_role = request.POST.get('role', 'STUDENT')
         
         user = authenticate(request, username=username, password=password)
         
         if user:
-            # Check if user's actual role matches selected login role
-            if user.is_superuser:
-                # Superuser can login under any role, default to admin
-                login(request, user)
-                return redirect(next_url or '/admin/dashboard/')
-            elif user.role == selected_role:
-                # For students, check approval status
-                if user.role == 'STUDENT':
-                    if user.approval_status == 'PENDING':
-                        return render(request, 'admin/login.html', {
-                            'error': 'Your registration is pending approval. Please wait for coordinator approval.',
-                            'warning': True
-                        })
-                    elif user.approval_status == 'REJECTED':
-                        rejection_msg = user.rejection_reason or 'No reason provided'
-                        return render(request, 'admin/login.html', {
-                            'error': f'Your registration was rejected. Reason: {rejection_msg}',
-                            'danger': True
-                        })
-                
-                login(request, user)
-                return redirect(next_url or get_dashboard_url(user.role))
-            else:
-                # Role mismatch
-                role_display = dict(User.ROLE_CHOICES).get(user.role, user.role)
-                return render(request, 'admin/login.html', {
-                    'error': f'Your account is registered as {role_display}. Please select the correct role tab.'
-                })
+            # Log the user in
+            login(request, user)
+            
+            # Redirect based on actual user role
+            if next_url:
+                return redirect(next_url)
+            return redirect_by_role(user)
         else:
             return render(request, 'admin/login.html', {
-                'error': 'Invalid username or password'
+                'error': 'Invalid username or password',
+                'danger': True
             })
     
     # Check for success message from registration
     success = request.GET.get('registered')
     context = {}
     if success:
-        context['success'] = 'Registration successful! Your account is pending approval by a coordinator.'
+        context['success'] = 'Registration successful!'
+    
+    # Also handle messages passed via Django messages framework
+    from django.contrib import messages
+    storage = messages.get_messages(request)
+    for message in storage:
+        if message.tags == 'error':
+            context['error'] = str(message)
+            context['danger'] = True
+        elif message.tags == 'success':
+            context['success'] = str(message)
+        elif message.tags == 'warning':
+            context['error'] = str(message)
+            context['warning'] = True
     
     return render(request, 'admin/login.html', context)
 
@@ -93,14 +85,9 @@ def user_logout(request):
 
 
 def student_register(request):
-    """Student registration view with institution and batch selection, pending approval"""
+    """Student registration view with institution selection, pending approval"""
     if request.user.is_authenticated:
         return redirect_by_role(request.user)
-    
-    # Get all active institutions and batches for the dropdowns
-    institutions = Institution.objects.filter(is_active=True)
-    from batches.models import Batch
-    batches = Batch.objects.filter(is_active=True).select_related('institution')
     
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -109,9 +96,10 @@ def student_register(request):
         confirm_password = request.POST.get('confirm_password')
         first_name = request.POST.get('first_name', '')
         last_name = request.POST.get('last_name', '')
+        last_name = request.POST.get('last_name', '')
         phone = request.POST.get('phone', '')
-        institution_id = request.POST.get('institution', '')
-        batch_id = request.POST.get('batch', '')
+        qualification = request.POST.get('qualification')
+
         
         # Validation
         errors = []
@@ -128,18 +116,14 @@ def student_register(request):
         if len(password) < 6:
             errors.append('Password must be at least 6 characters')
         
-        if not institution_id:
-            errors.append('Please select an institution')
+
         
         if errors:
             return render(request, 'student/register.html', {
                 'errors': errors,
                 'form_data': request.POST,
-                'institutions': institutions,
-                'batches': batches,
             })
         
-        # Create user with pending approval status
         user = User.objects.create_user(
             username=username,
             email=email,
@@ -148,17 +132,17 @@ def student_register(request):
             last_name=last_name,
             phone=phone or None,
             role='STUDENT',
-            approval_status='PENDING',  # Pending coordinator approval
-            institution_id=institution_id,
-            batch_id=batch_id if batch_id else None,
+            approval_status='APPROVED',  # Automatically approved
+            institution_id=None,
         )
+        if qualification:
+            user.qualification = qualification
+            user.save()
+        
         
         return redirect('/login/?registered=1')
     
-    return render(request, 'student/register.html', {
-        'institutions': institutions,
-        'batches': batches,
-    })
+    return render(request, 'student/register.html')
 
 
 # Keep backward compatibility - admin_login now uses unified_login
@@ -174,13 +158,16 @@ def admin_logout(request):
 @admin_required
 def coordinator_list(request):
     coordinators = User.objects.filter(role='COORDINATOR').select_related('institution')
+    companies = Institution.objects.all().order_by('name')
     return render(request, 'admin/coordinators.html', {
-        'coordinators': coordinators
+        'coordinators': coordinators,
+        'companies': companies
     })
 
 @admin_required
 def add_coordinator(request):
     institutions = Institution.objects.filter(is_active=True)
+    selected_inst_id = request.GET.get('institution')
     
     if request.method == 'POST':
         user = User.objects.create_user(
@@ -195,10 +182,17 @@ def add_coordinator(request):
         if institution_id:
             user.institution_id = institution_id
             user.save()
+            # If we came from an institution page, redirect back there
+            if request.POST.get('from_institution'):
+                from django.contrib import messages
+                messages.success(request, f'Coordinator "{user.username}" added successfully!')
+                return redirect('edit_institution', id=institution_id)
+                
         return redirect('coordinator_list')
 
     return render(request, 'admin/add_coordinator.html', {
-        'institutions': institutions
+        'institutions': institutions,
+        'selected_inst_id': selected_inst_id
     })
 
 @admin_required

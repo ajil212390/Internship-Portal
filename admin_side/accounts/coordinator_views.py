@@ -196,28 +196,62 @@ def attendance_list(request):
     internships = Internship.objects.filter(coordinator=coordinator)
     
     # Get approved applications
-    course_ids = courses.values_list('id', flat=True)
-    internship_ids = internships.values_list('id', flat=True)
+    course_ids = list(courses.values_list('id', flat=True))
+    internship_ids = list(internships.values_list('id', flat=True))
     
     applications = Application.objects.filter(
         Q(course_id__in=course_ids) | Q(internship_id__in=internship_ids),
         status='APPROVED'
-    ).select_related('student', 'course', 'internship')
+    )
     
-    # Get attendance records
+    selected_program = request.GET.get('program', '')
+    
     attendance_records = Attendance.objects.filter(
         application__in=applications
-    ).select_related('application', 'application__student').order_by('-date')
+    ).select_related('application', 'application__student', 'application__course', 'application__internship').order_by('-date', '-session')
     
+    session_filter = request.GET.get('session', '')
+    query = request.GET.get('q', '')
+
+    if query:
+        attendance_records = attendance_records.filter(
+            Q(application__student__username__icontains=query) |
+            Q(application__student__first_name__icontains=query) |
+            Q(application__student__last_name__icontains=query)
+        )
+
     if date_filter:
         attendance_records = attendance_records.filter(date=date_filter)
+        
+    if session_filter:
+        attendance_records = attendance_records.filter(session=session_filter)
+        
+    if selected_program:
+        if selected_program.startswith('course_'):
+            c_id = selected_program.split('_')[1]
+            attendance_records = attendance_records.filter(application__course_id=c_id)
+        elif selected_program.startswith('internship_'):
+            i_id = selected_program.split('_')[1]
+            attendance_records = attendance_records.filter(application__internship_id=i_id)
     
+    # Processed programs for template selection
+    processed_courses = []
+    for c in courses:
+        processed_courses.append({'id': c.id, 'name': c.name, 'val': f"course_{c.id}"})
+    
+    processed_internships = []
+    for i in internships:
+        processed_internships.append({'id': i.id, 'name': i.title, 'val': f"internship_{i.id}"})
+
     context = {
         'attendance_records': attendance_records[:50],
         'applications': applications,
-        'courses': courses,
-        'internships': internships,
+        'courses': processed_courses,
+        'internships': processed_internships,
         'date_filter': date_filter,
+        'session_filter': session_filter,
+        'selected_program': selected_program,
+        'query': query,
     }
     return render(request, 'coordinator/attendance.html', context)
 
@@ -241,13 +275,23 @@ def mark_attendance(request):
         
         try:
             mark_date = timezone.datetime.strptime(date_str, '%Y-%m-%d').date()
+            today = timezone.now().date()
+            if mark_date < today:
+                messages.error(request, 'Attendance marking for past dates is locked.')
+                return redirect('coordinator:mark_attendance')
         except ValueError:
             messages.error(request, 'Invalid date format.')
             return redirect('coordinator:mark_attendance')
         
         # Get applications to mark
         application_ids = request.POST.getlist('application_ids')
+        
+        if not application_ids:
+            messages.warning(request, 'Please select at least one student to mark attendance.')
+            return redirect('coordinator:mark_attendance')
+        
         saved = 0
+        errors = 0
         
         for app_id in application_ids:
             status = request.POST.get(f'status_{app_id}')
@@ -268,28 +312,86 @@ def mark_attendance(request):
                     )
                     saved += 1
                 except Application.DoesNotExist:
-                    pass
+                    errors += 1
+                except Exception as e:
+                    errors += 1
+                    print(f"Error marking attendance for app {app_id}: {str(e)}")
         
-        messages.success(request, f'Saved {session.lower()} attendance for {saved} students.')
+        if saved > 0:
+            messages.success(request, f'Successfully saved {session.lower()} attendance for {saved} student(s).')
+        if errors > 0:
+            messages.warning(request, f'{errors} student(s) had errors.')
+        
         return redirect('coordinator:attendance')
     
     # GET request - show form
+    selected_program = request.GET.get('program', '')
     courses = Course.objects.filter(coordinator=coordinator)
     internships = Internship.objects.filter(coordinator=coordinator)
     
-    course_ids = courses.values_list('id', flat=True)
-    internship_ids = internships.values_list('id', flat=True)
+    # Processed programs for template selection
+    processed_courses = []
+    for c in courses:
+        processed_courses.append({'id': c.id, 'name': c.name, 'val': f"course_{c.id}"})
     
-    applications = Application.objects.filter(
-        Q(course_id__in=course_ids) | Q(internship_id__in=internship_ids),
-        status='APPROVED'
-    ).select_related('student', 'course', 'internship')
+    processed_internships = []
+    for i in internships:
+        processed_internships.append({'id': i.id, 'name': i.title, 'val': f"internship_{i.id}"})
+
+    # Auto-select program if only one exists
+    if not selected_program:
+        total_programs = len(processed_courses) + len(processed_internships)
+        if total_programs == 1:
+            if processed_courses:
+                selected_program = processed_courses[0]['val']
+            else:
+                selected_program = processed_internships[0]['val']
+
+    # Filter applications based on selected program
+    applications = Application.objects.filter(status='APPROVED').select_related('student', 'course', 'internship')
     
+    if selected_program:
+        if selected_program.startswith('course_'):
+            c_id = selected_program.split('_')[1]
+            applications = applications.filter(course_id=c_id)
+        elif selected_program.startswith('internship_'):
+            i_id = selected_program.split('_')[1]
+            applications = applications.filter(internship_id=i_id)
+    else:
+        # Default: Show only if assigned to this coordinator
+        course_ids = courses.values_list('id', flat=True)
+        internship_ids = internships.values_list('id', flat=True)
+        applications = applications.filter(
+            Q(course_id__in=course_ids) | Q(internship_id__in=internship_ids)
+        )
+    
+    query = request.GET.get('q', '')
+    if query:
+        applications = applications.filter(
+            Q(student__username__icontains=query) |
+            Q(student__first_name__icontains=query) |
+            Q(student__last_name__icontains=query)
+        )
+
+
+    # Diagnostic data: Check if there are pending applications
+    course_ids_all = courses.values_list('id', flat=True)
+    internship_ids_all = internships.values_list('id', flat=True)
+    pending_count = Application.objects.filter(
+        Q(course_id__in=course_ids_all) | Q(internship_id__in=internship_ids_all),
+        status='PENDING'
+    ).count()
+
     context = {
         'applications': applications,
+        'courses': processed_courses,
+        'internships': processed_internships,
+        'selected_program': selected_program,
+        'pending_count': pending_count,
         'today': timezone.now().date(),
         'status_choices': Attendance.STATUS_CHOICES,
         'session_choices': Attendance.SESSION_CHOICES,
+        'query': query,
     }
     return render(request, 'coordinator/mark_attendance.html', context)
 
@@ -321,12 +423,28 @@ def certificate_list(request):
     if status_filter != 'all':
         certificates = certificates.filter(status=status_filter.upper())
     
-    # Also get applications without certificates (eligible for creation)
-    apps_without_cert = applications.exclude(certificate__isnull=False)
+    # Identify applications eligible for a certificate but don't have one yet
+    # Or have one that was previously rejected/revoked
+    eligible_requests = []
+    
+    # We only care about applications that don't have an active certificate process or are pending approval
+    apps_needing_check = applications.exclude(
+        certificate__status__in=['APPROVED', 'ISSUED']
+    ).select_related('student', 'course', 'internship')
+
+    for app in apps_needing_check:
+        attendance_percentage = Attendance.get_attendance_percentage(app)
+        if attendance_percentage >= 75:
+            eligible_requests.append({
+                'application': app,
+                'percentage': attendance_percentage,
+                'has_cert': hasattr(app, 'certificate'),
+                'cert_status': app.certificate.status if hasattr(app, 'certificate') else 'None'
+            })
     
     context = {
         'certificates': certificates,
-        'apps_without_cert': apps_without_cert,
+        'eligible_requests': eligible_requests,
         'status_filter': status_filter,
     }
     return render(request, 'coordinator/certificates.html', context)
@@ -334,9 +452,8 @@ def certificate_list(request):
 
 @coordinator_required
 def approve_certificate(request, certificate_id):
-    """Approve a certificate"""
+    """Approve a certificate application from Coordinator dashboard"""
     coordinator = request.user
-    
     certificate = get_object_or_404(Certificate, id=certificate_id)
     application = certificate.application
     
@@ -353,18 +470,66 @@ def approve_certificate(request, certificate_id):
     if action == 'approve':
         certificate.status = 'APPROVED'
         certificate.approved_by = coordinator
-        messages.success(request, f'Certificate approved for {application.student.username}.')
+        messages.success(request, f'Certificate approved and sent to Admin for {application.student.username}.')
     elif action == 'issue':
-        certificate.status = 'ISSUED'
-        certificate.issued_date = timezone.now().date()
+        # Historically coordinators could issue, but workflow now says Admin issues.
+        # We will set to APPROVED to signal Admin anyway.
+        certificate.status = 'APPROVED'
         certificate.approved_by = coordinator
-        messages.success(request, f'Certificate issued for {application.student.username}.')
+        messages.info(request, f'Certificate approved and sent to Admin for final generation.')
     elif action == 'reject':
         certificate.status = 'PENDING'
         certificate.remarks = request.POST.get('remarks', '')
-        messages.warning(request, f'Certificate rejected for {application.student.username}.')
+        messages.warning(request, f'Certificate request for {application.student.username} sent back to pending.')
     
     certificate.save()
+    return redirect('coordinator:certificates')
+
+
+@coordinator_required
+def request_certificate(request, application_id):
+    """Coordinator approves eligibility and sends request to Admin for generation"""
+    coordinator = request.user
+    application = get_object_or_404(Application, id=application_id)
+    
+    # Verify coordinator has access
+    if application.course and application.course.coordinator != coordinator:
+        messages.error(request, 'Access denied.')
+        return redirect(request.META.get('HTTP_REFERER', 'coordinator:certificates'))
+    if application.internship and application.internship.coordinator != coordinator:
+        messages.error(request, 'Access denied.')
+        return redirect(request.META.get('HTTP_REFERER', 'coordinator:certificates'))
+    
+    # Check eligibility (attendance >= 75%)
+    attendance_percentage = Attendance.get_attendance_percentage(application)
+    if attendance_percentage < 75:
+        messages.error(request, 'Student is not eligible for a certificate (attendance < 75%).')
+        return redirect(request.META.get('HTTP_REFERER', 'coordinator:certificates'))
+    
+    # Create or update certificate record
+    cert, created = Certificate.objects.get_or_create(
+        application=application,
+        defaults={
+            'status': 'APPROVED', # Approved by Coordinator -> Sent to Admin
+            'is_eligible': True,
+            'attendance_percentage': attendance_percentage,
+            'approved_by': coordinator
+        }
+    )
+    
+    if not created:
+        cert.status = 'APPROVED'
+        cert.is_eligible = True
+        cert.attendance_percentage = attendance_percentage
+        cert.approved_by = coordinator
+        cert.save()
+    
+    messages.success(request, f'Certificate for {application.student.username} has been approved and sent to Admin for generation.')
+    
+    # Redirect back to where they came from (Certificates list or Student Detail)
+    referer = request.META.get('HTTP_REFERER')
+    if referer:
+        return redirect(referer)
     return redirect('coordinator:certificates')
 
 
@@ -416,108 +581,44 @@ def profile(request):
 def student_list(request):
     """List all students from coordinator's institution"""
     coordinator = request.user
-    status_filter = request.GET.get('status', 'all')
+    query = request.GET.get('q', '')
     
-    # Get students from coordinator's institution
+    # Get coordinator's programs
+    courses = Course.objects.filter(coordinator=coordinator)
+    internships = Internship.objects.filter(coordinator=coordinator)
+    
+    # Get students who have applied to coordinator's programs
     students = User.objects.filter(
         role='STUDENT',
-        institution=coordinator.institution
-    ).order_by('-created_at')
+        applications__course__in=courses
+    ) | User.objects.filter(
+        role='STUDENT',
+        applications__internship__in=internships
+    )
     
-    # Apply status filter
-    if status_filter == 'pending':
-        students = students.filter(approval_status='PENDING')
-    elif status_filter == 'approved':
-        students = students.filter(approval_status='APPROVED')
-    elif status_filter == 'rejected':
-        students = students.filter(approval_status='REJECTED')
+    # Ensure they are distinct and prefetch related data
+    students = students.distinct().prefetch_related('applications', 'applications__certificate').order_by('-created_at')
     
-    # Get counts
-    total_students = User.objects.filter(role='STUDENT', institution=coordinator.institution).count()
-    pending_count = User.objects.filter(role='STUDENT', institution=coordinator.institution, approval_status='PENDING').count()
-    approved_count = User.objects.filter(role='STUDENT', institution=coordinator.institution, approval_status='APPROVED').count()
-    rejected_count = User.objects.filter(role='STUDENT', institution=coordinator.institution, approval_status='REJECTED').count()
+    if query:
+        students = students.filter(
+            Q(username__icontains=query) |
+            Q(email__icontains=query) |
+            Q(first_name__icontains=query) |
+            Q(last_name__icontains=query)
+        )
+    
+    # Get total count
+    total_students = students.count()
     
     context = {
         'students': students,
-        'status_filter': status_filter,
         'total_students': total_students,
-        'pending_count': pending_count,
-        'approved_count': approved_count,
-        'rejected_count': rejected_count,
+        'query': query,
     }
     return render(request, 'coordinator/students.html', context)
 
 
-@coordinator_required
-def pending_students(request):
-    """View students pending approval from coordinator's institution"""
-    coordinator = request.user
-    
-    students = User.objects.filter(
-        role='STUDENT',
-        institution=coordinator.institution,
-        approval_status='PENDING'
-    ).order_by('-created_at')
-    
-    context = {
-        'students': students,
-        'pending_count': students.count(),
-    }
-    return render(request, 'coordinator/pending_students.html', context)
 
-
-@coordinator_required
-def approve_student(request, student_id):
-    """Approve a student registration"""
-    coordinator = request.user
-    
-    student = get_object_or_404(User, id=student_id, role='STUDENT')
-    
-    # Verify student is from coordinator's institution
-    if student.institution != coordinator.institution:
-        messages.error(request, 'You can only approve students from your institution.')
-        return redirect('coordinator:students')
-    
-    if student.approval_status != 'PENDING':
-        messages.warning(request, 'This student has already been processed.')
-        return redirect('coordinator:students')
-    
-    student.approval_status = 'APPROVED'
-    student.approved_by = coordinator
-    student.approval_date = timezone.now()
-    student.save()
-    
-    messages.success(request, f'Student {student.username} has been approved successfully!')
-    return redirect('coordinator:students')
-
-
-@coordinator_required
-def reject_student(request, student_id):
-    """Reject a student registration"""
-    coordinator = request.user
-    
-    student = get_object_or_404(User, id=student_id, role='STUDENT')
-    
-    # Verify student is from coordinator's institution
-    if student.institution != coordinator.institution:
-        messages.error(request, 'You can only reject students from your institution.')
-        return redirect('coordinator:students')
-    
-    if student.approval_status != 'PENDING':
-        messages.warning(request, 'This student has already been processed.')
-        return redirect('coordinator:students')
-    
-    rejection_reason = request.POST.get('rejection_reason', 'No reason provided')
-    
-    student.approval_status = 'REJECTED'
-    student.approved_by = coordinator
-    student.approval_date = timezone.now()
-    student.rejection_reason = rejection_reason
-    student.save()
-    
-    messages.success(request, f'Student {student.username} has been rejected.')
-    return redirect('coordinator:students')
 
 
 @coordinator_required
@@ -527,9 +628,14 @@ def student_detail(request, student_id):
     
     student = get_object_or_404(User, id=student_id, role='STUDENT')
     
-    # Verify student is from coordinator's institution
-    if student.institution != coordinator.institution:
-        messages.error(request, 'You can only view students from your institution.')
+    # Verify student has applied to at least one of coordinator's programs
+    has_access = Application.objects.filter(
+        Q(student=student),
+        Q(course__coordinator=coordinator) | Q(internship__coordinator=coordinator)
+    ).exists()
+    
+    if not has_access:
+        messages.error(request, 'You do not have permission to view this student.')
         return redirect('coordinator:students')
     
     # Get student's applications
@@ -639,3 +745,137 @@ def eligible_students(request):
         'total_eligible': len(eligible_list),
     }
     return render(request, 'coordinator/eligible_students.html', context)
+@coordinator_required
+def add_course(request):
+    """Add a new course for the coordinator's institution"""
+    coordinator = request.user
+    institution = coordinator.institution
+    
+    if not institution:
+        messages.error(request, "You must be assigned to an institution to add courses.")
+        return redirect('coordinator:courses')
+        
+    if request.method == 'POST':
+        Course.objects.create(
+            name=request.POST['name'],
+            description=request.POST.get('description'),
+            institution=institution,
+            coordinator=coordinator,
+            duration_days=request.POST.get('duration_days', 30),
+            max_students=request.POST.get('max_students', 50),
+            start_date=request.POST.get('start_date') or None,
+            end_date=request.POST.get('end_date') or None,
+            eligibility=request.POST.get('eligibility'),
+            category=request.POST.get('category', 'OTHER'),
+        )
+        messages.success(request, f"Course '{request.POST['name']}' created successfully.")
+        return redirect('coordinator:courses')
+    
+    return render(request, 'coordinator/add_course.html', {
+        'categories': Course.CATEGORY_CHOICES
+    })
+
+
+@coordinator_required
+def edit_course(request, course_id):
+    """Edit an existing course"""
+    coordinator = request.user
+    course = get_object_or_404(Course, id=course_id, coordinator=coordinator)
+    
+    if request.method == 'POST':
+        course.name = request.POST['name']
+        course.description = request.POST.get('description')
+        course.duration_days = request.POST.get('duration_days', 30)
+        course.max_students = request.POST.get('max_students', 50)
+        course.start_date = request.POST.get('start_date') or None
+        course.end_date = request.POST.get('end_date') or None
+        course.eligibility = request.POST.get('eligibility')
+        course.category = request.POST.get('category', 'OTHER')
+        course.save()
+        messages.success(request, f"Course '{course.name}' updated successfully.")
+        return redirect('coordinator:courses')
+    
+    return render(request, 'coordinator/edit_course.html', {
+        'course': course,
+        'categories': Course.CATEGORY_CHOICES
+    })
+
+
+@coordinator_required
+def delete_course(request, course_id):
+    """Delete a course"""
+    coordinator = request.user
+    course = get_object_or_404(Course, id=course_id, coordinator=coordinator)
+    course.delete()
+    messages.success(request, "Course deleted successfully.")
+    return redirect('coordinator:courses')
+
+
+@coordinator_required
+def add_internship(request):
+    """Add a new internship for the coordinator's institution"""
+    coordinator = request.user
+    institution = coordinator.institution
+    
+    if not institution:
+        messages.error(request, "You must be assigned to an institution to add internships.")
+        return redirect('coordinator:internships')
+        
+    if request.method == 'POST':
+        Internship.objects.create(
+            title=request.POST['title'],
+            description=request.POST.get('description'),
+            institution=institution,
+            coordinator=coordinator,
+            duration=request.POST.get('duration', 30),
+            max_students=request.POST.get('max_students', 20),
+            start_date=request.POST.get('start_date') or None,
+            end_date=request.POST.get('end_date') or None,
+            requirements=request.POST.get('requirements'),
+            skills_gained=request.POST.get('skills_gained'),
+            category=request.POST.get('category', 'OTHER'),
+            eligibility=request.POST.get('eligibility'),
+        )
+        messages.success(request, f"Internship '{request.POST['title']}' created successfully.")
+        return redirect('coordinator:internships')
+    
+    return render(request, 'coordinator/add_internship.html', {
+        'categories': Internship.CATEGORY_CHOICES
+    })
+
+
+@coordinator_required
+def edit_internship(request, internship_id):
+    """Edit an existing internship"""
+    coordinator = request.user
+    internship = get_object_or_404(Internship, id=internship_id, coordinator=coordinator)
+    
+    if request.method == 'POST':
+        internship.title = request.POST['title']
+        internship.description = request.POST.get('description')
+        internship.duration = request.POST.get('duration', 30)
+        internship.max_students = request.POST.get('max_students', 20)
+        internship.start_date = request.POST.get('start_date') or None
+        internship.end_date = request.POST.get('end_date') or None
+        internship.requirements = request.POST.get('requirements')
+        internship.skills_gained = request.POST.get('skills_gained')
+        internship.category = request.POST.get('category', 'OTHER')
+        internship.eligibility = request.POST.get('eligibility')
+        internship.save()
+        messages.success(request, f"Internship '{internship.title}' updated successfully.")
+        return redirect('coordinator:internships')
+    
+    return render(request, 'coordinator/edit_internship.html', {
+        'internship': internship,
+        'categories': Internship.CATEGORY_CHOICES
+    })
+
+
+@coordinator_required
+def delete_internship(request, internship_id):
+    """Delete an internship"""
+    coordinator = request.user
+    internship = get_object_or_404(Internship, id=internship_id, coordinator=coordinator)
+    internship.delete()
+    messages.success(request, "Internship deleted successfully.")
+    return redirect('coordinator:internships')

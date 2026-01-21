@@ -46,7 +46,7 @@ def admin_dashboard(request):
     recent_activities = []
     
     # Recent institutions
-    for inst in Institution.objects.order_by('-created_at')[:3]:
+    for inst in Institution.objects.order_by('-created_at')[:5]:
         recent_activities.append({
             'date': inst.created_at,
             'name': inst.name,
@@ -57,7 +57,7 @@ def admin_dashboard(request):
         })
     
     # Recent coordinators
-    for coord in User.objects.filter(role='COORDINATOR').order_by('-created_at')[:3]:
+    for coord in User.objects.filter(role='COORDINATOR').order_by('-created_at')[:5]:
         recent_activities.append({
             'date': coord.created_at,
             'name': coord.username,
@@ -67,30 +67,8 @@ def admin_dashboard(request):
             'url': f'/admin/coordinators/edit/{coord.id}/'
         })
     
-    # Recent courses
-    for course in Course.objects.order_by('-created_at')[:3]:
-        recent_activities.append({
-            'date': course.created_at,
-            'name': course.name,
-            'type': 'Course',
-            'status': 'Active' if course.is_active else 'Inactive',
-            'icon': 'book',
-            'url': f'/admin/courses/edit/{course.id}/'
-        })
-    
-    # Recent internships
-    for internship in Internship.objects.order_by('-created_at')[:3]:
-        recent_activities.append({
-            'date': internship.created_at,
-            'name': internship.title,
-            'type': 'Internship',
-            'status': 'Active' if internship.is_active else 'Inactive',
-            'icon': 'briefcase',
-            'url': f'/admin/internships/edit/{internship.id}/'
-        })
-    
-    # Sort by date descending and take top 10
-    recent_activities = sorted(recent_activities, key=lambda x: x['date'], reverse=True)[:10]
+    # Sort by date descending and take top 5
+    recent_activities = sorted(recent_activities, key=lambda x: x['date'], reverse=True)[:5]
     
     context = {
         # Basic counts
@@ -125,35 +103,51 @@ def admin_dashboard(request):
 
 @admin_required
 def reports_dashboard(request):
-    """Reports and analytics view"""
+    """Enhanced reports and analytics view with time-series data"""
     from django.db.models import Count, Q
     from django.db.models.functions import TruncMonth
+    from datetime import datetime, timedelta
     
-    # Applications by status
+    # 1. Applications by status
     applications_by_status = Application.objects.values('status').annotate(
         count=Count('id')
     )
     
-    # Applications by institution
-    applications_by_institution = Application.objects.values(
-        'course__institution__name', 'internship__institution__name'
-    ).annotate(count=Count('id'))
-    
-    # Students by institution
+    # 2. Monthly registration trends (Last 6 months)
+    six_months_ago = timezone.now() - timedelta(days=180)
+    monthly_trends = Application.objects.filter(applied_at__gte=six_months_ago)\
+        .annotate(month=TruncMonth('applied_at'))\
+        .values('month')\
+        .annotate(count=Count('id'))\
+        .order_by('month')
+
+    # 3. Students by institution
     students_by_institution = User.objects.filter(role='STUDENT').values(
         'institution__name'
-    ).annotate(count=Count('id'))
+    ).annotate(count=Count('id')).order_by('-count')[:8]
     
-    # Courses by institution
-    courses_by_institution = Course.objects.values(
-        'institution__name'
-    ).annotate(count=Count('id'))
+    # 4. Courses vs Internships distribution
+    program_distribution = {
+        'Courses': Course.objects.count(),
+        'Internships': Internship.objects.count()
+    }
     
+    # 5. Application density by institution (Combined Course/Internship)
+    # We'll do this in a clean way to avoid double counting or NULLs
+    from institutions.models import Institution
+    inst_apps = Institution.objects.annotate(
+        app_count=Count('course__application', distinct=True) + Count('internship__application', distinct=True)
+    ).values('name', 'app_count').order_by('-app_count')[:10]
+
     context = {
-        'applications_by_status': applications_by_status,
-        'applications_by_institution': applications_by_institution,
-        'students_by_institution': students_by_institution,
-        'courses_by_institution': courses_by_institution,
+        'applications_by_status': list(applications_by_status),
+        'monthly_trends': [
+            {'month': item['month'].strftime('%b %Y'), 'count': item['count']} 
+            for item in monthly_trends
+        ],
+        'students_by_institution': list(students_by_institution),
+        'program_distribution': program_distribution,
+        'inst_apps': list(inst_apps),
     }
     
     return render(request, 'admin/reports.html', context)

@@ -17,6 +17,12 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     
+    <style>
+        /* Hide scrollbars globally */
+        *::-webkit-scrollbar { display: none; }
+        * { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+    
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -44,7 +50,11 @@
                     </a>
                     <a href="{% url 'student:programs' %}" class="nav-item {% if request.resolver_match.url_name == 'programs' or request.resolver_match.url_name == 'search' %}active{% endif %}">
                         <i class="fas fa-book-open"></i>
-                        <span>Programs</span>
+                        <span>Browse Programs</span>
+                    </a>
+                    <a href="{% url 'student:my_programs' %}" class="nav-item {% if request.resolver_match.url_name == 'my_programs' %}active{% endif %}">
+                        <i class="fas fa-graduation-cap"></i>
+                        <span>My Programs</span>
                     </a>
                     <a href="{% url 'student:applications' %}" class="nav-item {% if request.resolver_match.url_name == 'applications' %}active{% endif %}">
                         <i class="fas fa-file-alt"></i>

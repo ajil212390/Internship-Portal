@@ -1,0 +1,19 @@
+Total Users: 17
+Students: 11
+Coordinators: 5
+Approved Applications: 8
+Total Attendance Records: 15
+Coordinator goutham (Institution: GK Technologies): 0 courses, 0 internships
+  Approved apps for this coordinator: 0
+  Total apps (all statuses) for this coordinator: 0
+Coordinator minha (Institution: IBM): 0 courses, 0 internships
+  Approved apps for this coordinator: 0
+  Total apps (all statuses) for this coordinator: 0
+Coordinator jailson (Institution: EY): 0 courses, 0 internships
+  Approved apps for this coordinator: 0
+  Total apps (all statuses) for this coordinator: 0
+Coordinator Ajill (Institution: Deloitte): 1 courses, 0 internships
+  Approved apps for this coordinator: 8
+Coordinator kp (Institution: TCS): 0 courses, 0 internships
+  Approved apps for this coordinator: 0
+  Total apps (all statuses) for this coordinator: 0
