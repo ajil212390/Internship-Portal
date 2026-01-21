@@ -6,13 +6,13 @@
 <!-- Breadcrumb -->
 <div class="d-flex items-center gap-2 mb-6">
     <a href="{% url 'institution_list' %}" class="text-muted" style="font-size: 0.875rem;">
-        <i class="fas fa-building"></i> Institutions
+        <i class="fas fa-building"></i> Companies
     </a>
     <i class="fas fa-chevron-right text-muted" style="font-size: 0.75rem;"></i>
     <span style="font-size: 0.875rem;">{{ institution.name }}</span>
 </div>
 
-<!-- Institution Info Cards -->
+<!-- Company Info Cards -->
 <div class="stats-grid mb-6">
     <div class="stat-card">
         <div class="stat-content">
@@ -61,7 +61,7 @@
         <div class="card-header">
             <h3 class="card-title">
                 <i class="fas fa-building" style="color: var(--primary-500); margin-right: 8px;"></i>
-                Institution Details
+                Company Details
             </h3>
             <a href="{% url 'edit_institution' institution.id %}" class="btn btn-secondary btn-sm">
                 <i class="fas fa-edit"></i> Edit
@@ -69,7 +69,7 @@
         </div>
         <div class="card-body">
             <div class="mb-4">
-                <div class="text-muted mb-1" style="font-size: 0.75rem; text-transform: uppercase;">College Name</div>
+                <div class="text-muted mb-1" style="font-size: 0.75rem; text-transform: uppercase;">Company Name</div>
                 <div class="font-semibold" style="font-size: 1.125rem;">{{ institution.name }}</div>
             </div>
             <div class="mb-4">
@@ -81,7 +81,7 @@
             </div>
             {% if institution.email %}
             <div class="mb-4">
-                <div class="text-muted mb-1" style="font-size: 0.75rem; text-transform: uppercase;">College Email</div>
+                <div class="text-muted mb-1" style="font-size: 0.75rem; text-transform: uppercase;">Company Email</div>
                 <div class="d-flex items-center gap-2">
                     <i class="fas fa-envelope text-muted"></i>
                     <a href="mailto:{{ institution.email }}">{{ institution.email }}</a>
@@ -90,7 +90,7 @@
             {% endif %}
             {% if institution.phone %}
             <div class="mb-4">
-                <div class="text-muted mb-1" style="font-size: 0.75rem; text-transform: uppercase;">College Phone</div>
+                <div class="text-muted mb-1" style="font-size: 0.75rem; text-transform: uppercase;">Company Phone</div>
                 <div class="d-flex items-center gap-2">
                     <i class="fas fa-phone text-muted"></i>
                     {{ institution.phone }}
@@ -108,43 +108,43 @@
         </div>
     </div>
     
-    <!-- Principal Information Card -->
+    <!-- HR Coordinator Information Card -->
     <div class="card">
         <div class="card-header">
             <h3 class="card-title">
                 <i class="fas fa-user-tie" style="color: var(--warning); margin-right: 8px;"></i>
-                Principal Information
+                HR Coordinator Information
             </h3>
         </div>
         <div class="card-body">
-            {% if institution.principal_name %}
+            {% if institution.hr_coordinator_name %}
             <div class="mb-4">
-                <div class="text-muted mb-1" style="font-size: 0.75rem; text-transform: uppercase;">Principal Name</div>
-                <div class="font-semibold" style="font-size: 1.125rem;">{{ institution.principal_name }}</div>
+                <div class="text-muted mb-1" style="font-size: 0.75rem; text-transform: uppercase;">HR Coordinator Name</div>
+                <div class="font-semibold" style="font-size: 1.125rem;">{{ institution.hr_coordinator_name }}</div>
             </div>
             {% endif %}
-            {% if institution.principal_email %}
+            {% if institution.hr_coordinator_email %}
             <div class="mb-4">
                 <div class="text-muted mb-1" style="font-size: 0.75rem; text-transform: uppercase;">Direct Email</div>
                 <div class="d-flex items-center gap-2">
                     <i class="fas fa-envelope text-muted"></i>
-                    <a href="mailto:{{ institution.principal_email }}">{{ institution.principal_email }}</a>
+                    <a href="mailto:{{ institution.hr_coordinator_email }}">{{ institution.hr_coordinator_email }}</a>
                 </div>
             </div>
             {% endif %}
-            {% if institution.principal_phone %}
+            {% if institution.hr_coordinator_phone %}
             <div class="mb-4">
                 <div class="text-muted mb-1" style="font-size: 0.75rem; text-transform: uppercase;">Phone</div>
                 <div class="d-flex items-center gap-2">
                     <i class="fas fa-phone text-muted"></i>
-                    {{ institution.principal_phone }}
+                    {{ institution.hr_coordinator_phone }}
                 </div>
             </div>
             {% endif %}
-            {% if not institution.principal_name and not institution.principal_email and not institution.principal_phone %}
+            {% if not institution.hr_coordinator_name and not institution.hr_coordinator_email and not institution.hr_coordinator_phone %}
             <div class="text-center py-6">
                 <i class="fas fa-user-slash text-muted" style="font-size: 2rem;"></i>
-                <p class="text-muted mt-2">No principal information added</p>
+                <p class="text-muted mt-2">No HR coordinator information added</p>
             </div>
             {% endif %}
         </div>
@@ -204,8 +204,8 @@
                         <td>
                             {% if coord.id == institution.coordinator_id %}
                                 <span class="badge badge-success">Main Coordinator</span>
-                            {% else %}
-                                <span class="badge badge-info">Course/Internship</span>
+                            {% elif coord.institution_id == institution.id %}
+                                <span class="badge badge-success">Coordinator</span>
                             {% endif %}
                         </td>
                     </tr>
@@ -219,7 +219,7 @@
                 <i class="fas fa-chalkboard-teacher"></i>
             </div>
             <h3>No Coordinators Assigned</h3>
-            <p>No coordinators have been assigned to this institution yet</p>
+            <p>No coordinators have been assigned to this company yet</p>
         </div>
         {% endif %}
     </div>
@@ -293,7 +293,7 @@
                 <i class="fas fa-user-graduate"></i>
             </div>
             <h3>No Students Enrolled</h3>
-            <p>No students have been enrolled in this institution yet</p>
+            <p>No students have been enrolled in this company yet</p>
         </div>
         {% endif %}
     </div>
@@ -303,11 +303,11 @@
 <div class="d-flex gap-4">
     <a href="{% url 'institution_list' %}" class="btn btn-secondary btn-lg">
         <i class="fas fa-arrow-left"></i>
-        Back to Institutions
+        Back to Companies
     </a>
     <a href="{% url 'edit_institution' institution.id %}" class="btn btn-primary btn-lg">
         <i class="fas fa-edit"></i>
-        Edit Institution
+        Edit Company
     </a>
 </div>
 {% endblock %}

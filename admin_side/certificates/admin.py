@@ -22,7 +22,10 @@ class CertificateAdmin(admin.ModelAdmin):
     
     def issue_certificates(self, request, queryset):
         issued = 0
+        default_template = CertificateTemplate.objects.first()
         for cert in queryset.filter(is_eligible=True, status__in=['PENDING', 'APPROVED']):
+            if not cert.template and default_template:
+                cert.template = default_template
             if cert.issue(request.user):
                 issued += 1
         self.message_user(request, f"Issued {issued} certificates.")

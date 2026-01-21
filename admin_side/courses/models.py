@@ -15,6 +15,17 @@ class Course(models.Model):
         limit_choices_to={'role': 'COORDINATOR'},
         related_name='coordinated_courses'
     )
+    CATEGORY_CHOICES = (
+        ('WEB', 'Web Development'),
+        ('PYTHON', 'Python Programming'),
+        ('DATA', 'Data Science'),
+        ('AI', 'Artificial Intelligence'),
+        ('APP', 'App Development'),
+        ('CYBER', 'Cyber Security'),
+        ('DESIGN', 'UI/UX Design'),
+        ('OTHER', 'Other'),
+    )
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='OTHER')
     duration_days = models.IntegerField(default=30, help_text="Duration in days")
     max_students = models.IntegerField(default=50)
     start_date = models.DateField(blank=True, null=True)

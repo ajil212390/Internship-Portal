@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-hw8e*en=@v67(7a1y!o8z&mkjelm9=5v0d2!t2@n1z*rr)=h-c
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['192.168.31.112', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'accounts',
     'institutions',
-    'batches',  # Batch management
     'dashboard',
     'courses',
     'internships',
@@ -82,12 +81,30 @@ WSGI_APPLICATION = 'smart_internship.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+# Using SQLite for local development
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# MySQL configuration (uncomment when MySQL is available)
+# import pymysql
+# pymysql.version_info = (2, 2, 1, 'final', 0)
+# pymysql.install_as_MySQLdb()
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'smart_internship_db',
+#         'USER': 'root',
+#         'PASSWORD': '',
+#         'HOST': '127.0.0.1',
+#         'PORT': '3308',
+#     }
+# }
+
+
 
 
 

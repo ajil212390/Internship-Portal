@@ -6,12 +6,8 @@
 <!-- Page Header -->
 <div class="d-flex justify-between items-center mb-6">
     <div>
-        <p class="text-muted">Manage all courses and assign coordinators</p>
+        <p class="text-muted">Manage all courses (Creating is handled by HR Coordinators)</p>
     </div>
-    <a href="{% url 'add_course' %}" class="btn btn-primary">
-        <i class="fas fa-plus"></i>
-        Add Course
-    </a>
 </div>
 
 <!-- Courses Table Card -->
@@ -105,11 +101,7 @@
                                     <i class="fas fa-book"></i>
                                 </div>
                                 <h3>No Courses Found</h3>
-                                <p>Get started by adding your first course</p>
-                                <a href="{% url 'add_course' %}" class="btn btn-primary">
-                                    <i class="fas fa-plus"></i>
-                                    Add Course
-                                </a>
+                                <p>Courses are created by HR Coordinators from their portal.</p>
                             </div>
                         </td>
                     </tr>

@@ -63,34 +63,31 @@ class Command(BaseCommand):
 
         # Create Students
         students_data = [
-            # MIT College - Batch 2024
-            {'username': 'amit_sharma', 'first_name': 'Amit', 'last_name': 'Sharma', 'email': 'amit.sharma@student.edu', 'batch': '2024', 'institution': institutions[0]},
-            {'username': 'priya_patel', 'first_name': 'Priya', 'last_name': 'Patel', 'email': 'priya.patel@student.edu', 'batch': '2024', 'institution': institutions[0]},
-            {'username': 'rahul_verma', 'first_name': 'Rahul', 'last_name': 'Verma', 'email': 'rahul.verma@student.edu', 'batch': '2024', 'institution': institutions[0]},
-            {'username': 'sneha_desai', 'first_name': 'Sneha', 'last_name': 'Desai', 'email': 'sneha.desai@student.edu', 'batch': '2024', 'institution': institutions[0]},
+            # MIT College
+            {'username': 'amit_sharma', 'first_name': 'Amit', 'last_name': 'Sharma', 'email': 'amit.sharma@student.edu', 'institution': institutions[0]},
+            {'username': 'priya_patel', 'first_name': 'Priya', 'last_name': 'Patel', 'email': 'priya.patel@student.edu', 'institution': institutions[0]},
+            {'username': 'rahul_verma', 'first_name': 'Rahul', 'last_name': 'Verma', 'email': 'rahul.verma@student.edu', 'institution': institutions[0]},
+            {'username': 'sneha_desai', 'first_name': 'Sneha', 'last_name': 'Desai', 'email': 'sneha.desai@student.edu', 'institution': institutions[0]},
             
-            # MIT College - Batch 2025
-            {'username': 'vikram_singh', 'first_name': 'Vikram', 'last_name': 'Singh', 'email': 'vikram.singh@student.edu', 'batch': '2025', 'institution': institutions[0]},
-            {'username': 'anjali_mehta', 'first_name': 'Anjali', 'last_name': 'Mehta', 'email': 'anjali.mehta@student.edu', 'batch': '2025', 'institution': institutions[0]},
-            {'username': 'karan_joshi', 'first_name': 'Karan', 'last_name': 'Joshi', 'email': 'karan.joshi@student.edu', 'batch': '2025', 'institution': institutions[0]},
+            {'username': 'vikram_singh', 'first_name': 'Vikram', 'last_name': 'Singh', 'email': 'vikram.singh@student.edu', 'institution': institutions[0]},
+            {'username': 'anjali_mehta', 'first_name': 'Anjali', 'last_name': 'Mehta', 'email': 'anjali.mehta@student.edu', 'institution': institutions[0]},
+            {'username': 'karan_joshi', 'first_name': 'Karan', 'last_name': 'Joshi', 'email': 'karan.joshi@student.edu', 'institution': institutions[0]},
             
-            # COEP - Batch 2024
-            {'username': 'neha_kulkarni', 'first_name': 'Neha', 'last_name': 'Kulkarni', 'email': 'neha.kulkarni@coep.edu', 'batch': '2024', 'institution': institutions[1]},
-            {'username': 'rohan_jadhav', 'first_name': 'Rohan', 'last_name': 'Jadhav', 'email': 'rohan.jadhav@coep.edu', 'batch': '2024', 'institution': institutions[1]},
-            {'username': 'pooja_rane', 'first_name': 'Pooja', 'last_name': 'Rane', 'email': 'pooja.rane@coep.edu', 'batch': '2024', 'institution': institutions[1]},
+            # COEP
+            {'username': 'neha_kulkarni', 'first_name': 'Neha', 'last_name': 'Kulkarni', 'email': 'neha.kulkarni@coep.edu', 'institution': institutions[1]},
+            {'username': 'rohan_jadhav', 'first_name': 'Rohan', 'last_name': 'Jadhav', 'email': 'rohan.jadhav@coep.edu', 'institution': institutions[1]},
+            {'username': 'pooja_rane', 'first_name': 'Pooja', 'last_name': 'Rane', 'email': 'pooja.rane@coep.edu', 'institution': institutions[1]},
             
-            # COEP - Batch 2025
-            {'username': 'aditya_bhosale', 'first_name': 'Aditya', 'last_name': 'Bhosale', 'email': 'aditya.bhosale@coep.edu', 'batch': '2025', 'institution': institutions[1]},
-            {'username': 'kavya_shinde', 'first_name': 'Kavya', 'last_name': 'Shinde', 'email': 'kavya.shinde@coep.edu', 'batch': '2025', 'institution': institutions[1]},
+            {'username': 'aditya_bhosale', 'first_name': 'Aditya', 'last_name': 'Bhosale', 'email': 'aditya.bhosale@coep.edu', 'institution': institutions[1]},
+            {'username': 'kavya_shinde', 'first_name': 'Kavya', 'last_name': 'Shinde', 'email': 'kavya.shinde@coep.edu', 'institution': institutions[1]},
             
-            # VIT - Batch 2024
-            {'username': 'siddharth_naik', 'first_name': 'Siddharth', 'last_name': 'Naik', 'email': 'siddharth.naik@vit.edu', 'batch': '2024', 'institution': institutions[2]},
-            {'username': 'ishita_sawant', 'first_name': 'Ishita', 'last_name': 'Sawant', 'email': 'ishita.sawant@vit.edu', 'batch': '2024', 'institution': institutions[2]},
-            {'username': 'arjun_pawar', 'first_name': 'Arjun', 'last_name': 'Pawar', 'email': 'arjun.pawar@vit.edu', 'batch': '2024', 'institution': institutions[2]},
+            # VIT
+            {'username': 'siddharth_naik', 'first_name': 'Siddharth', 'last_name': 'Naik', 'email': 'siddharth.naik@vit.edu', 'institution': institutions[2]},
+            {'username': 'ishita_sawant', 'first_name': 'Ishita', 'last_name': 'Sawant', 'email': 'ishita.sawant@vit.edu', 'institution': institutions[2]},
+            {'username': 'arjun_pawar', 'first_name': 'Arjun', 'last_name': 'Pawar', 'email': 'arjun.pawar@vit.edu', 'institution': institutions[2]},
             
-            # VIT - Batch 2025
-            {'username': 'divya_kamble', 'first_name': 'Divya', 'last_name': 'Kamble', 'email': 'divya.kamble@vit.edu', 'batch': '2025', 'institution': institutions[2]},
-            {'username': 'harsh_gaikwad', 'first_name': 'Harsh', 'last_name': 'Gaikwad', 'email': 'harsh.gaikwad@vit.edu', 'batch': '2025', 'institution': institutions[2]},
+            {'username': 'divya_kamble', 'first_name': 'Divya', 'last_name': 'Kamble', 'email': 'divya.kamble@vit.edu', 'institution': institutions[2]},
+            {'username': 'harsh_gaikwad', 'first_name': 'Harsh', 'last_name': 'Gaikwad', 'email': 'harsh.gaikwad@vit.edu', 'institution': institutions[2]},
         ]
 
         for student_data in students_data:
@@ -100,7 +97,6 @@ class Command(BaseCommand):
                     'first_name': student_data['first_name'],
                     'last_name': student_data['last_name'],
                     'email': student_data['email'],
-                    'batch': student_data['batch'],
                     'institution': student_data['institution'],
                     'role': 'STUDENT',
                     'is_active': True
@@ -109,7 +105,7 @@ class Command(BaseCommand):
             if created:
                 student.set_password('password123')  # Default password
                 student.save()
-                self.stdout.write(self.style.SUCCESS(f'✓ Created student: {student.get_full_name()} (Batch {student.batch})'))
+                self.stdout.write(self.style.SUCCESS(f'✓ Created student: {student.get_full_name()}'))
             else:
                 self.stdout.write(self.style.WARNING(f'○ Student already exists: {student.username}'))
 

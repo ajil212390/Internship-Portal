@@ -1,0 +1,272 @@
+{% extends 'coordinator/base.html' %}
+{% block title %}Student Details - {{ student.username }}{% endblock %}
+{% block page_title %}Student Profile Details{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <a href="{% url 'coordinator:students' %}" class="btn btn-secondary btn-sm">
+        <i class="fas fa-arrow-left"></i> Back to Students
+    </a>
+</div>
+
+<div class="grid-2">
+    <!-- Student Header Card -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Personal Information</h3>
+        </div>
+        <div class="card-body">
+            <div style="display: flex; align-items: center; gap: var(--space-6); margin-bottom: var(--space-8);">
+                <div class="user-avatar" style="width: 80px; height: 80px; font-size: 2rem;">
+                    {% if student.profile_picture %}
+                        <img src="{{ student.profile_picture.url }}" alt="" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                    {% else %}
+                        {{ student.username|slice:":1"|upper }}
+                    {% endif %}
+                </div>
+                <div>
+                    <h2 style="font-size: 1.5rem; font-weight: 700;">{{ student.get_full_name|default:student.username }}</h2>
+                    <p style="color: var(--text-muted);">@{{ student.username }} | Student ID: #{{ student.id }}</p>
+                    <div style="margin-top: var(--space-2);">
+                        {% if student.approval_status == 'APPROVED' %}
+                            <span class="badge badge-success">Approved Account</span>
+                        {% elif student.approval_status == 'PENDING' %}
+                            <span class="badge badge-warning">Pending Approval</span>
+                        {% else %}
+                            <span class="badge badge-error">Rejected</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
+                <div class="info-group">
+                    <label style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Email Address</label>
+                    <p>{{ student.email }}</p>
+                </div>
+                <div class="info-group">
+                    <label style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Phone Number</label>
+                    <p>{{ student.phone|default:"Not provided" }}</p>
+                </div>
+                <div class="info-group" style="grid-column: span 2; margin-top: var(--space-2);">
+                    <label style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Address</label>
+                    <p>{{ student.address|default:"Not provided" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats & Quick Actions -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Academic Overview</h3>
+        </div>
+        <div class="card-body">
+            <div class="stats-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: var(--space-6);">
+                <div class="stat-card" style="padding: var(--space-4);">
+                    <div class="stat-content">
+                        <span class="stat-label">Applications</span>
+                        <span class="stat-value" style="font-size: 1.5rem;">{{ applications.count }}</span>
+                    </div>
+                </div>
+                <div class="stat-card" style="padding: var(--space-4);">
+                    <div class="stat-content">
+                        <span class="stat-label">Certificates</span>
+                        <span class="stat-value" style="font-size: 1.5rem;">{{ certificates.count }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {% if student.approval_status == 'PENDING' %}
+            <div style="background: var(--warning-light); padding: var(--space-4); border-radius: var(--radius-md); border-left: 4px solid var(--warning);">
+                <p style="font-size: 0.875rem; color: var(--warning-dark); font-weight: 500; margin-bottom: var(--space-3);">This student is awaiting registration approval.</p>
+                <div style="display: flex; gap: var(--space-2);">
+                    <form method="POST" action="{% url 'coordinator:approve_student' student.id %}" style="flex: 1;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success btn-sm" style="width: 100%;">
+                            <i class="fas fa-check"></i> Approve Student
+                        </button>
+                    </form>
+                    <button type="button" class="btn btn-danger btn-sm" style="flex: 1;" onclick="openModal('rejectModal')">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Programs & Enrollment Details -->
+<div class="card mt-6">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-book-reader" style="margin-right: 8px;"></i>Enrolled Programs & Certificates</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Program Name</th>
+                        <th>Type</th>
+                        <th>Enrollment Date</th>
+                        <th>Status</th>
+                        <th>Attendance</th>
+                        <th>Certificate Status</th>
+                        <th style="text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in applications %}
+                    <tr>
+                        <td><strong>{{ app.program_name }}</strong></td>
+                        <td><span class="tag">{{ app.program_type }}</span></td>
+                        <td>{{ app.applied_at|date:"M d, Y" }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if app.status == 'APPROVED' %}badge-success
+                                {% elif app.status == 'PENDING' %}badge-warning
+                                {% else %}badge-error{% endif %}">
+                                {{ app.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <!-- Attendance progress will be calculated in view or template filter if available -->
+                            <!-- Since we have the percentage logic in models, it's best handled in view -->
+                            <div style="font-weight: 600;">-</div>
+                        </td>
+                        <td>
+                            {% if app.certificate %}
+                                <span class="badge 
+                                    {% if app.certificate.status == 'ISSUED' %}badge-success
+                                    {% elif app.certificate.status == 'APPROVED' %}badge-info
+                                    {% else %}badge-warning{% endif %}">
+                                    {{ app.certificate.get_status_display }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted">No Cert Generated</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: right;">
+                            {% if app.status == 'PENDING' %}
+                                <div style="display: flex; gap: var(--space-2); justify-content: flex-end;">
+                                    <form method="post" action="{% url 'coordinator:approve_application' app.id %}" style="margin: 0;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success btn-sm" title="Approve Enrollment">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    </form>
+                                    <form method="post" action="{% url 'coordinator:reject_application' app.id %}" style="margin: 0;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger btn-sm" title="Reject Enrollment">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            {% elif app.status == 'APPROVED' and not app.certificate %}
+                                <form method="post" action="{% url 'coordinator:request_certificate' app.id %}" style="margin: 0;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-primary btn-sm" title="Request Certificate">
+                                        <i class="fas fa-certificate"></i> Request
+                                    </button>
+                                </form>
+                            {% elif app.certificate and app.certificate.status == 'PENDING' %}
+                                <form method="post" action="{% url 'coordinator:approve_certificate' app.certificate.id %}" style="margin: 0;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="approve">
+                                    <button type="submit" class="btn btn-success btn-sm">
+                                        <i class="fas fa-check"></i> Approve Cert
+                                    </button>
+                                </form>
+                            {% else %}
+                                <span class="text-muted" style="font-size: 0.75rem;">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center" style="padding: var(--space-8); color: var(--text-muted);">
+                            No program applications found for this student.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Attendance Activity -->
+<div class="card mt-6">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-calendar-alt" style="margin-right: 8px;"></i>Recent Attendance</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Session</th>
+                        <th>Program</th>
+                        <th>Status</th>
+                        <th>Marked By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in attendance %}
+                    <tr>
+                        <td>{{ record.date|date:"M d, Y" }}</td>
+                        <td>{{ record.get_session_display }}</td>
+                        <td>{{ record.application.program_name }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if record.status == 'PRESENT' %}badge-success
+                                {% elif record.status == 'ABSENT' %}badge-error
+                                {% elif record.status == 'LATE' %}badge-warning
+                                {% else %}badge-neutral{% endif %}">
+                                {{ record.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ record.marked_by.username|default:"System" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center" style="padding: var(--space-8); color: var(--text-muted);">
+                            No attendance records found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if student.approval_status == 'PENDING' %}
+<div class="modal-overlay" id="rejectModal">
+    <div class="custom-modal">
+        <div class="modal-header">
+            <h3 class="card-title">Reject Student Registration</h3>
+            <button class="btn btn-ghost btn-sm" onclick="closeModal('rejectModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form method="POST" action="{% url 'coordinator:reject_student' student.id %}">
+            {% csrf_token %}
+            <div class="modal-body">
+                <p>Please provide a reason for rejecting <strong>{{ student.get_full_name|default:student.username }}</strong>:</p>
+                <div class="form-group mt-4">
+                    <textarea name="rejection_reason" rows="3" class="form-control" style="width: 100%;" required placeholder="Reason for rejection..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('rejectModal')">Cancel</button>
+                <button type="submit" class="btn btn-danger">Confirm Rejection</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

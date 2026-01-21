@@ -4,6 +4,34 @@
 {% block page_title %}Attendance Records{% endblock %}
 
 {% block content %}
+<!-- Filter Section -->
+<div class="card" style="margin-bottom: var(--space-6);">
+    <div class="card-body">
+        <form method="get" style="display: flex; gap: var(--space-4); flex-wrap: wrap; align-items: flex-end;">
+            <div style="flex: 1; min-width: 150px;">
+                <label style="display: block; font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 4px;">Date</label>
+                <input type="date" name="date" value="{{ filter_date|default:'' }}" class="form-control" style="width: 100%;">
+            </div>
+            <div style="flex: 1; min-width: 150px;">
+                <label style="display: block; font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 4px;">Session</label>
+                <select name="session" class="form-control" style="width: 100%;">
+                    <option value="ALL" {% if session_filter == 'ALL' %}selected{% endif %}>All Sessions</option>
+                    <option value="MORNING" {% if session_filter == 'MORNING' %}selected{% endif %}>Morning</option>
+                    <option value="EVENING" {% if session_filter == 'EVENING' %}selected{% endif %}>Evening</option>
+                </select>
+            </div>
+            <div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+                <a href="{% url 'student:attendance' %}" class="btn btn-secondary" style="margin-left: 8px;">
+                    <i class="fas fa-undo"></i> Reset
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
 {% if attendance_data %}
     {% for item in attendance_data %}
     <div class="card" style="margin-bottom: var(--space-6);">
@@ -43,8 +71,9 @@
             <!-- Eligibility Alert -->
             <div style="margin-bottom: var(--space-6);">
                 {% if item.eligible_for_certificate %}
-                <div class="alert alert-success" style="background: var(--success-light); color: var(--success-dark); padding: var(--space-3); border-radius: var(--radius-sm); border: 1px solid var(--success);">
-                    <i class="fas fa-check-circle"></i> Good job! You are eligible for a certificate (Attendance ≥ 75%).
+                <div class="alert alert-success floating-success-alert" style="position: fixed; right: 20px; z-index: 9999; min-width: 300px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); background: var(--success-light); color: var(--success-dark); padding: var(--space-4); border-radius: var(--radius-md); border-left: 5px solid var(--success);">
+                    <div style="font-weight: 600; margin-bottom: 4px;">{{ item.application.program_name }}</div>
+                    <div><i class="fas fa-check-circle"></i> Good job! You are eligible for a certificate.</div>
                 </div>
                 {% else %}
                 <div class="alert alert-warning" style="background: var(--warning-light); color: var(--warning-dark); padding: var(--space-3); border-radius: var(--radius-sm); border: 1px solid var(--warning);">
@@ -112,4 +141,27 @@
     </div>
 </div>
 {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle floating alerts
+        const alerts = document.querySelectorAll('.floating-success-alert');
+        alerts.forEach(function(alert, index) {
+            // Stack alerts vertically
+            alert.style.top = (20 + (index * 80)) + 'px';
+            
+            // Auto hide after 3 seconds
+            setTimeout(function() {
+                alert.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateX(100%)';
+                setTimeout(function() {
+                    alert.remove();
+                }, 500);
+            }, 3000);
+        });
+    });
+</script>
 {% endblock %}

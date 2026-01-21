@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Coordinator Portal{% endblock %} | Smart Internship</title>
+    <title>{% block title %}HR Coordinator Portal{% endblock %} | Smart Internship</title>
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,12 +14,69 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     
-    <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    
+    <style>
+        /* Hide scrollbars globally */
+        *::-webkit-scrollbar { display: none; }
+        * { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Custom Modal System */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+            padding: var(--space-4);
+        }
+        .modal-overlay.show {
+            display: flex;
+        }
+        .custom-modal {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 500px;
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--border-light);
+            overflow: hidden;
+            animation: modalIn 0.3s ease-out;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .modal-header {
+            padding: var(--space-5) var(--space-6);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .modal-body {
+            padding: var(--space-6);
+        }
+        .modal-footer {
+            padding: var(--space-4) var(--space-6);
+            border-top: 1px solid var(--border-light);
+            background: var(--bg-secondary);
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--space-3);
+        }
+    </style>
     
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+    {# (Keep the body content as is, I will replace the end of file for JS) #}
     <div class="app-layout">
         <!-- Sidebar -->
         <aside class="sidebar">
@@ -30,7 +87,7 @@
                     </div>
                     <div class="sidebar-logo-text">
                         <h1>Smart Internship</h1>
-                        <span>Coordinator Portal</span>
+                        <span>HR Coordinator Portal</span>
                     </div>
                 </div>
             </div>
@@ -63,8 +120,8 @@
                         <span>Students</span>
                     </a>
                     <a href="{% url 'coordinator:applications' %}" class="nav-item {% if request.resolver_match.url_name == 'applications' %}active{% endif %}">
-                        <i class="fas fa-file-alt"></i>
-                        <span>Applications</span>
+                        <i class="fas fa-file-signature"></i>
+                        <span>Enrollments</span>
                     </a>
                     <a href="{% url 'coordinator:attendance' %}" class="nav-item {% if request.resolver_match.url_name == 'attendance' or request.resolver_match.url_name == 'mark_attendance' %}active{% endif %}">
                         <i class="fas fa-calendar-check"></i>
@@ -111,7 +168,7 @@
                     <div class="user-menu">
                         <div class="user-info">
                             <div class="user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
-                            <div class="user-role">Coordinator</div>
+                            <div class="user-role">HR Coordinator</div>
                         </div>
                         <div class="user-avatar">
                             {% if request.user.profile_picture %}
@@ -146,6 +203,20 @@
         </main>
     </div>
     
+    <script>
+        function openModal(id) {
+            document.getElementById(id).classList.add('show');
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('show');
+        }
+        // Close modal when clicking on overlay
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.classList.remove('show');
+            }
+        }
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

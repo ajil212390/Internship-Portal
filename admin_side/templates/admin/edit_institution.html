@@ -1,12 +1,12 @@
 {% extends "admin/custom_base.html" %}
-{% block title %}Edit Institution{% endblock %}
-{% block page_title %}Edit Institution{% endblock %}
+{% block title %}Edit Company{% endblock %}
+{% block page_title %}Edit Company{% endblock %}
 
 {% block content %}
 <!-- Breadcrumb -->
 <div class="d-flex items-center gap-2 mb-6">
     <a href="{% url 'institution_list' %}" class="text-muted" style="font-size: 0.875rem;">
-        <i class="fas fa-building"></i> Institutions
+        <i class="fas fa-building"></i> Companies
     </a>
     <i class="fas fa-chevron-right text-muted" style="font-size: 0.75rem;"></i>
     <span style="font-size: 0.875rem;">{{ institution.name }}</span>
@@ -17,25 +17,25 @@
 <form method="post">
     {% csrf_token %}
     <div class="grid-2">
-        <!-- College Information Card -->
+        <!-- Company Information Card -->
         <div class="card mb-6">
             <div class="card-header">
                 <h3 class="card-title">
                     <i class="fas fa-building" style="color: var(--primary-500); margin-right: 8px;"></i>
-                    College Information
+                    Company Information
                 </h3>
             </div>
             <div class="card-body">
                 <div class="form-group">
                     <label class="form-label" for="name">
-                        College Name <span style="color: var(--error);">*</span>
+                        Company Name <span style="color: var(--error);">*</span>
                     </label>
                     <input type="text" 
                            id="name" 
                            name="name" 
                            class="form-control" 
                            value="{{ institution.name }}"
-                           placeholder="Enter college name" 
+                           placeholder="Enter company name" 
                            required>
                 </div>
                 
@@ -55,19 +55,19 @@
                 <div class="grid-2" style="gap: 16px;">
                     <div class="form-group">
                         <label class="form-label" for="email">
-                            College Email
+                            Company Email
                         </label>
                         <input type="email" 
                                id="email" 
                                name="email" 
                                class="form-control" 
                                value="{{ institution.email|default:'' }}"
-                               placeholder="college@example.com">
+                               placeholder="company@example.com">
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label" for="phone">
-                            College Phone
+                            Company Phone
                         </label>
                         <input type="tel" 
                                id="phone" 
@@ -80,88 +80,17 @@
             </div>
         </div>
         
-        <!-- Principal Information Card -->
-        <div class="card mb-6">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-user-tie" style="color: var(--warning); margin-right: 8px;"></i>
-                    Principal Information
-                </h3>
-            </div>
-            <div class="card-body">
-                <div class="form-group">
-                    <label class="form-label" for="principal_name">
-                        Principal Name
-                    </label>
-                    <input type="text" 
-                           id="principal_name" 
-                           name="principal_name" 
-                           class="form-control" 
-                           value="{{ institution.principal_name|default:'' }}"
-                           placeholder="Enter principal's full name">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="principal_email">
-                        Principal Email (Direct)
-                    </label>
-                    <input type="email" 
-                           id="principal_email" 
-                           name="principal_email" 
-                           class="form-control" 
-                           value="{{ institution.principal_email|default:'' }}"
-                           placeholder="principal@example.com">
-                    <p class="form-text">Direct email address for the principal</p>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="principal_phone">
-                        Principal Phone
-                    </label>
-                    <input type="tel" 
-                           id="principal_phone" 
-                           name="principal_phone" 
-                           class="form-control" 
-                           value="{{ institution.principal_phone|default:'' }}"
-                           placeholder="+91 98765 43210">
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Coordinator Assignment Card -->
-    <div class="card mb-6">
-        <div class="card-header">
-            <h3 class="card-title">
-                <i class="fas fa-user-plus" style="color: var(--info); margin-right: 8px;"></i>
-                Assign Coordinator
-            </h3>
-        </div>
-        <div class="card-body">
-            <div class="form-group mb-0">
-                <label class="form-label" for="coordinator">
-                    Select Coordinator
-                </label>
-                <select id="coordinator" name="coordinator" class="form-control">
-                    <option value="">-- Select Coordinator --</option>
-                    {% for c in coordinators %}
-                        <option value="{{ c.id }}" {% if institution.coordinator_id == c.id %}selected{% endif %}>
-                            {{ c.username }} ({{ c.email }})
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-        </div>
-    </div>
-    
     <!-- Assigned Coordinators Card -->
-    {% if institution.assigned_coordinators %}
     <div class="card mb-6">
-        <div class="card-header">
+        <div class="card-header d-flex justify-between items-center">
             <h3 class="card-title">
                 <i class="fas fa-users" style="color: var(--success); margin-right: 8px;"></i>
                 Assigned Coordinators ({{ institution.assigned_coordinators.count }})
             </h3>
+            <a href="{% url 'add_coordinator' %}?institution={{ institution.id }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus"></i>
+                Add New Coordinator
+            </a>
         </div>
         <div class="card-body" style="padding: 0;">
             <div class="table-container">
@@ -193,8 +122,8 @@
                             <td>
                                 {% if coord.id == institution.coordinator_id %}
                                     <span class="badge badge-success">Main Coordinator</span>
-                                {% else %}
-                                    <span class="badge badge-info">Course/Internship</span>
+                                {% elif coord.institution_id == institution.id %}
+                                    <span class="badge badge-success">Coordinator</span>
                                 {% endif %}
                             </td>
                         </tr>
@@ -204,32 +133,31 @@
             </div>
         </div>
     </div>
-    {% endif %}
+    </div> <!-- Close grid-2 -->
     
     <!-- Action Buttons -->
-    <div class="d-flex justify-between items-center">
+    <div class="d-flex items-center" style="width: 100%; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border-light);">
         <div class="d-flex gap-4">
-            <button type="submit" class="btn btn-primary btn-lg">
+            <button type="submit" class="btn btn-primary btn-lg" style="min-width: 200px;">
                 <i class="fas fa-save"></i>
-                Update Institution
+                Update Company
             </button>
+        </div>
+        
+        <div class="d-flex gap-4" style="margin-left: auto;">
             <a href="{% url 'institution_list' %}" class="btn btn-secondary btn-lg">
                 <i class="fas fa-times"></i>
                 Cancel
             </a>
-        </div>
-        
-        <!-- Danger Actions -->
-        <div class="d-flex gap-4">
             <a href="{% url 'toggle_institution_status' institution.id %}" 
                class="btn {% if institution.is_active %}btn-warning{% else %}btn-success{% endif %} btn-lg"
-               onclick="return confirm('{% if institution.is_active %}Deactivate{% else %}Activate{% endif %} this institution?')">
+               onclick="return confirm('{% if institution.is_active %}Deactivate{% else %}Activate{% endif %} this company?')">
                 <i class="fas fa-{% if institution.is_active %}ban{% else %}check{% endif %}"></i>
                 {% if institution.is_active %}Deactivate{% else %}Activate{% endif %}
             </a>
             <a href="{% url 'delete_institution' institution.id %}" 
                class="btn btn-danger btn-lg"
-               onclick="return confirm('Are you sure you want to delete this institution? This action cannot be undone.')">
+               onclick="return confirm('Are you sure you want to delete this company? This action cannot be undone.')">
                 <i class="fas fa-trash"></i>
                 Delete
             </a>

@@ -54,6 +54,16 @@
                                 <div>
                                     <div class="font-semibold">{{ a.student.username }}</div>
                                     <div class="text-muted" style="font-size: 0.75rem;">{{ a.student.email }}</div>
+                                    <div class="text-muted" style="font-size: 0.75rem;">
+                                        Qualification: 
+                                        {% if a.highest_qualification_other %}
+                                            {{ a.highest_qualification_other }}
+                                        {% elif a.student.highest_qualification_other %}
+                                            {{ a.student.highest_qualification_other }}
+                                        {% else %}
+                                            {{ a.student.get_highest_qualification_display }}
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                         </td>

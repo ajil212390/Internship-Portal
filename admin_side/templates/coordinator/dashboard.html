@@ -38,7 +38,7 @@
     
     <div class="stat-card">
         <div class="stat-content">
-            <span class="stat-label">Pending Applications</span>
+            <span class="stat-label">Pending Enrollments</span>
             <span class="stat-value">{{ pending_applications }}</span>
         </div>
         <div class="stat-icon orange">
@@ -55,7 +55,7 @@
     <div class="card-body">
         <div style="display: flex; gap: var(--space-4); flex-wrap: wrap;">
             <a href="{% url 'coordinator:applications' %}?status=pending" class="btn btn-primary">
-                <i class="fas fa-file-alt"></i> Review Applications ({{ pending_applications }})
+                <i class="fas fa-file-signature"></i> Review Enrollments ({{ pending_applications }})
             </a>
             <a href="{% url 'coordinator:mark_attendance' %}" class="btn btn-success">
                 <i class="fas fa-calendar-check"></i> Mark Attendance
