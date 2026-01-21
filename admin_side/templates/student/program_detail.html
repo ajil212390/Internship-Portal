@@ -22,8 +22,8 @@
                     {{ program.description|default:"No description available." }}
                 </p>
                 
-                {% if program_type == 'course' and program.eligibility %}
-                <h4 style="margin-bottom: var(--space-3);">Eligibility</h4>
+                {% if program.eligibility %}
+                <h4 style="margin-bottom: var(--space-3);">Eligibility Criteria</h4>
                 <p style="color: var(--text-secondary); margin-bottom: var(--space-6); line-height: 1.8;">
                     {{ program.eligibility }}
                 </p>
@@ -58,7 +58,7 @@
             <div class="card-body">
                 <div style="display: flex; flex-direction: column; gap: var(--space-4);">
                     <div style="display: flex; justify-content: space-between; padding-bottom: var(--space-3); border-bottom: 1px solid var(--border-light);">
-                        <span style="color: var(--text-secondary);"><i class="fas fa-building" style="width: 20px;"></i> Institution</span>
+                        <span style="color: var(--text-secondary);"><i class="fas fa-building" style="width: 20px;"></i> Company</span>
                         <strong>{{ program.institution.name }}</strong>
                     </div>
                     <div style="display: flex; justify-content: space-between; padding-bottom: var(--space-3); border-bottom: 1px solid var(--border-light);">
@@ -71,9 +71,7 @@
                     </div>
                     <div style="display: flex; justify-content: space-between; padding-bottom: var(--space-3); border-bottom: 1px solid var(--border-light);">
                         <span style="color: var(--text-secondary);"><i class="fas fa-chair" style="width: 20px;"></i> Available Seats</span>
-                        <span class="badge {% if program.available_seats > 0 %}badge-success{% else %}badge-error{% endif %}">
-                            {{ program.available_seats }}
-                        </span>
+                        <span class="badge {% if program.available_seats > 0 %}badge-success{% else %}badge-error{% endif %}">{{ program.available_seats }}</span>
                     </div>
                     {% if program.start_date %}
                     <div style="display: flex; justify-content: space-between; padding-bottom: var(--space-3); border-bottom: 1px solid var(--border-light);">

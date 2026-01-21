@@ -1,39 +1,61 @@
 {% extends "admin/custom_base.html" %}
-{% block title %}Add Institution{% endblock %}
-{% block page_title %}Add New Institution{% endblock %}
+{% block title %}Add Company{% endblock %}
+{% block page_title %}Add New Company{% endblock %}
 
 {% block content %}
 <!-- Breadcrumb -->
 <div class="d-flex items-center gap-2 mb-6">
     <a href="{% url 'institution_list' %}" class="text-muted" style="font-size: 0.875rem;">
-        <i class="fas fa-building"></i> Institutions
+        <i class="fas fa-building"></i> Companies
     </a>
     <i class="fas fa-chevron-right text-muted" style="font-size: 0.75rem;"></i>
     <span style="font-size: 0.875rem;">Add New</span>
 </div>
 
+{% if messages %}
+<div class="mb-4">
+    {% for message in messages %}
+        <div class="alert {% if message.tags == 'error' or message.tags == 'danger' %}alert-danger{% elif message.tags == 'warning' %}alert-warning{% elif message.tags == 'success' %}alert-success{% else %}alert-info{% endif %}">
+            {{ message }}
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{# If somehow the view renders for a non-admin, show clear instruction #}
+{% if not request.user.is_authenticated %}
+<div class="alert alert-warning mb-4">
+    You must be logged in as an Admin to add a company. <a href="/login/?next={% url 'add_institution' %}">Login</a>
+</div>
+{% elif not request.user.is_superuser and request.user.role != 'ADMIN' %}
+<div class="alert alert-warning mb-4">
+    You do not have permission to add companies. Please contact an administrator.
+</div>
+{% endif %}
+
 <form method="post">
     {% csrf_token %}
     <div class="grid-2">
-        <!-- College Information Card -->
+        <!-- Company Information Card -->
         <div class="card mb-6">
             <div class="card-header">
                 <h3 class="card-title">
                     <i class="fas fa-building" style="color: var(--primary-500); margin-right: 8px;"></i>
-                    College Information
+                    Company Information
                 </h3>
             </div>
             <div class="card-body">
                 <div class="form-group">
                     <label class="form-label" for="name">
-                        College Name <span style="color: var(--error);">*</span>
+                        Company Name <span style="color: var(--error);">*</span>
                     </label>
                     <input type="text" 
                            id="name" 
                            name="name" 
                            class="form-control" 
-                           placeholder="Enter college name" 
-                           required>
+                           placeholder="Enter company name" 
+                           required
+                           value="{{ form_data.name|default:'' }}">
                 </div>
                 
                 <div class="form-group">
@@ -45,101 +67,134 @@
                            name="location" 
                            class="form-control" 
                            placeholder="Enter location (city, state)" 
-                           required>
+                           required
+                           value="{{ form_data.location|default:'' }}">
                 </div>
                 
                 <div class="grid-2" style="gap: 16px;">
                     <div class="form-group">
                         <label class="form-label" for="email">
-                            College Email
+                            Company Email
                         </label>
                         <input type="email" 
                                id="email" 
                                name="email" 
                                class="form-control" 
-                               placeholder="college@example.com">
+                               placeholder="company@example.com"
+                               value="{{ form_data.email|default:'' }}">
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label" for="phone">
-                            College Phone
+                            Company Phone
                         </label>
                         <input type="tel" 
                                id="phone" 
                                name="phone" 
                                class="form-control" 
-                               placeholder="+91 98765 43210">
+                               placeholder="+91 98765 43210"
+                               value="{{ form_data.phone|default:'' }}">
                     </div>
                 </div>
             </div>
         </div>
         
-        <!-- Principal Information Card -->
+        <!-- HR Coordinator Information Card -->
         <div class="card mb-6">
             <div class="card-header">
                 <h3 class="card-title">
                     <i class="fas fa-user-tie" style="color: var(--warning); margin-right: 8px;"></i>
-                    Principal Information
+                    HR Coordinator Account Creation
                 </h3>
+                <span class="badge badge-info">Required</span>
             </div>
             <div class="card-body">
-                <div class="form-group">
-                    <label class="form-label" for="principal_name">
-                        Principal Name
-                    </label>
-                    <input type="text" 
-                           id="principal_name" 
-                           name="principal_name" 
-                           class="form-control" 
-                           placeholder="Enter principal's full name">
+                <p class="text-muted mb-4" style="font-size: 0.875rem;">
+                    <i class="fas fa-info-circle"></i> Create the HR coordinator user account for this company. They will use these credentials to log in.
+                </p>
+                
+                <div class="grid-2" style="gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label" for="hr_coordinator_name">
+                            Full Name <span style="color: var(--error);">*</span>
+                        </label>
+                        <input type="text" 
+                               id="hr_coordinator_name" 
+                               name="hr_coordinator_name" 
+                               class="form-control" 
+                               placeholder="Enter HR coordinator's full name"
+                               required
+                               value="{{ form_data.hr_coordinator_name|default:'' }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="hr_coordinator_email">
+                            Email Address <span style="color: var(--error);">*</span>
+                        </label>
+                        <input type="email" 
+                               id="hr_coordinator_email" 
+                               name="hr_coordinator_email" 
+                               class="form-control" 
+                               placeholder="hr@company.com"
+                               required
+                               value="{{ form_data.hr_coordinator_email|default:'' }}">
+                    </div>
                 </div>
                 
-                <div class="form-group">
-                    <label class="form-label" for="principal_email">
-                        Principal Email (Direct)
-                    </label>
-                    <input type="email" 
-                           id="principal_email" 
-                           name="principal_email" 
-                           class="form-control" 
-                           placeholder="principal@example.com">
-                    <p class="form-text">Direct email address for the principal</p>
+                <div class="grid-2" style="gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label" for="hr_coordinator_phone">
+                            Phone Number
+                        </label>
+                        <input type="tel" 
+                               id="hr_coordinator_phone" 
+                               name="hr_coordinator_phone" 
+                               class="form-control" 
+                               placeholder="+91 98765 43210"
+                               value="{{ form_data.hr_coordinator_phone|default:'' }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="hr_username">
+                            Username <span style="color: var(--error);">*</span>
+                        </label>
+                        <input type="text" 
+                               id="hr_username" 
+                               name="hr_username" 
+                               class="form-control" 
+                               placeholder="hrcoordinator123"
+                               required
+                               value="{{ form_data.hr_username|default:'' }}">
+                        <p class="form-text">Used for login. Must be unique.</p>
+                    </div>
                 </div>
                 
-                <div class="form-group">
-                    <label class="form-label" for="principal_phone">
-                        Principal Phone
-                    </label>
-                    <input type="tel" 
-                           id="principal_phone" 
-                           name="principal_phone" 
-                           class="form-control" 
-                           placeholder="+91 98765 43210">
+                <div class="grid-2" style="gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label" for="hr_password">
+                            Password <span style="color: var(--error);">*</span>
+                        </label>
+                        <input type="password" 
+                               id="hr_password" 
+                               name="hr_password" 
+                               class="form-control" 
+                               placeholder="Enter secure password"
+                               required>
+                        <p class="form-text">Minimum 8 characters</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="hr_password_confirm">
+                            Confirm Password <span style="color: var(--error);">*</span>
+                        </label>
+                        <input type="password" 
+                               id="hr_password_confirm" 
+                               name="hr_password_confirm" 
+                               class="form-control" 
+                               placeholder="Re-enter password"
+                               required>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Coordinator Assignment Card -->
-    <div class="card mb-6">
-        <div class="card-header">
-            <h3 class="card-title">
-                <i class="fas fa-user-plus" style="color: var(--info); margin-right: 8px;"></i>
-                Assign Coordinator
-            </h3>
-        </div>
-        <div class="card-body">
-            <div class="form-group mb-0">
-                <label class="form-label" for="coordinator">
-                    Select Coordinator
-                </label>
-                <select id="coordinator" name="coordinator" class="form-control">
-                    <option value="">-- Select Coordinator (Optional) --</option>
-                    {% for c in coordinators %}
-                        <option value="{{ c.id }}">{{ c.username }} ({{ c.email }})</option>
-                    {% endfor %}
-                </select>
-                <p class="form-text">You can assign a coordinator now or later</p>
             </div>
         </div>
     </div>
@@ -148,7 +203,7 @@
     <div class="d-flex gap-4">
         <button type="submit" class="btn btn-primary btn-lg">
             <i class="fas fa-save"></i>
-            Save Institution
+            Save Company
         </button>
         <a href="{% url 'institution_list' %}" class="btn btn-secondary btn-lg">
             <i class="fas fa-times"></i>

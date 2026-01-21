@@ -5,11 +5,29 @@ from functools import wraps
 
 
 def admin_required(view_func):
-    """Decorator to require admin role"""
-    return user_passes_test(
-        lambda u: u.is_authenticated and (u.is_superuser or u.role == 'ADMIN'),
-        login_url='/login/'
-    )(view_func)
+    """Decorator to require admin role. Redirects unauthenticated users to login and
+    redirects authenticated non-admin users to their dashboard with an error message."""
+    from functools import wraps
+    from django.shortcuts import redirect
+    from django.contrib import messages
+
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        user = request.user
+        if not user.is_authenticated:
+            return redirect(f"/login/?next={request.path}")
+        if not (user.is_superuser or getattr(user, 'role', None) == 'ADMIN'):
+            messages.error(request, 'You must be an Admin to access that page.')
+            # Redirect authenticated users to their dashboard based on role
+            if user.is_superuser or getattr(user, 'role', None) == 'ADMIN':
+                return redirect('/admin/dashboard/')
+            elif getattr(user, 'role', None) == 'COORDINATOR':
+                return redirect('/coordinator/dashboard/')
+            else:
+                return redirect('/student/dashboard/')
+        return view_func(request, *args, **kwargs)
+
+    return _wrapped_view
 
 
 def coordinator_required(view_func):

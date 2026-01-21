@@ -1,0 +1,102 @@
+{% extends "admin/custom_base.html" %}
+{% block title %}Certificate Detail{% endblock %}
+{% block page_title %}Certificate Details{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <a href="{% url 'certificate_list' %}" class="btn btn-secondary btn-sm">
+        <i class="fas fa-arrow-left"></i> Back to List
+    </a>
+</div>
+
+<div class="grid-2">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Student Information</h3>
+        </div>
+        <div class="card-body">
+            <div class="d-flex items-center gap-4 mb-6">
+                <div class="user-avatar" style="width: 64px; height: 64px; font-size: 1.5rem;">
+                    {{ certificate.application.student.username|slice:":1"|upper }}
+                </div>
+                <div>
+                    <h2 class="font-bold text-xl">{{ certificate.application.student.get_full_name|default:certificate.application.student.username }}</h2>
+                    <p class="text-muted">{{ certificate.application.student.email }}</p>
+                </div>
+            </div>
+            
+            <div class="grid-2 gap-4">
+                <div>
+                    <span class="text-muted text-xs uppercase font-bold">Institution</span>
+                    <p>{{ certificate.application.student.institution.name }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Certificate Status</h3>
+        </div>
+        <div class="card-body">
+            <div class="mb-6">
+                <span class="badge badge-lg 
+                    {% if certificate.status == 'ISSUED' %}badge-success
+                    {% elif certificate.status == 'APPROVED' %}badge-info
+                    {% elif certificate.status == 'PENDING' %}badge-warning
+                    {% else %}badge-error{% endif %}">
+                    {{ certificate.get_status_display }}
+                </span>
+            </div>
+
+            <div class="grid-2 gap-4">
+                <div>
+                    <span class="text-muted text-xs uppercase font-bold">Certificate Number</span>
+                    <p class="font-mono">{{ certificate.certificate_number|default:"Not Assigned" }}</p>
+                </div>
+                <div>
+                    <span class="text-muted text-xs uppercase font-bold">Attendance at Issue</span>
+                    <p>{{ certificate.attendance_percentage }}%</p>
+                </div>
+            </div>
+
+            <div class="mt-8 d-flex gap-4">
+                {% if certificate.status == 'PENDING' or certificate.status == 'APPROVED' %}
+                    <a href="{% url 'approve_certificate' certificate.id %}" class="btn btn-success" style="flex: 1;">
+                        <i class="fas fa-check"></i> Approve & Issue
+                    </a>
+                {% elif certificate.status == 'ISSUED' %}
+                    <div class="alert alert-success" style="flex: 1; margin: 0; padding: 10px;">
+                        <i class="fas fa-check-circle"></i> Issued & Available for Student
+                    </div>
+                {% endif %}
+                <a href="{% url 'revoke_certificate' certificate.id %}" class="btn btn-error" style="flex: 1;">
+                    <i class="fas fa-ban"></i> Revoke Certificate
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-6">
+    <div class="card-header">
+        <h3 class="card-title">Program Details</h3>
+    </div>
+    <div class="card-body">
+        <div class="grid-3">
+            <div>
+                <span class="text-muted text-xs uppercase font-bold">Program Name</span>
+                <p class="font-semibold">{{ certificate.application.program_name }}</p>
+            </div>
+            <div>
+                <span class="text-muted text-xs uppercase font-bold">Type</span>
+                <p>{{ certificate.application.program_type|title }}</p>
+            </div>
+            <div>
+                <span class="text-muted text-xs uppercase font-bold">Coordinator</span>
+                <p>{{ certificate.application.course.coordinator.username|default:certificate.application.internship.coordinator.username|default:"Admin" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

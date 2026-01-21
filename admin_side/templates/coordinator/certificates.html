@@ -95,10 +95,10 @@
 </div>
 
 <!-- Eligible for Certificate -->
-{% if apps_without_cert %}
+{% if eligible_requests %}
 <div class="card">
     <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-user-check" style="margin-right: 8px;"></i>Eligible for Certificate</h3>
+        <h3 class="card-title"><i class="fas fa-user-check" style="margin-right: 8px;"></i>Eligible for Request (≥75% Attendance)</h3>
     </div>
     <div class="card-body" style="padding: 0;">
         <div class="table-container">
@@ -107,20 +107,28 @@
                     <tr>
                         <th>Student</th>
                         <th>Program</th>
-                        <th>Enrolled Since</th>
+                        <th>Attendance</th>
                         <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for app in apps_without_cert %}
+                    {% for item in eligible_requests %}
                     <tr>
                         <td>
-                            <strong>{{ app.student.get_full_name|default:app.student.username }}</strong>
+                            <strong>{{ item.application.student.get_full_name|default:item.application.student.username }}</strong>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ item.application.student.email }}</div>
                         </td>
-                        <td>{{ app.program_name }}</td>
-                        <td>{{ app.applied_at|date:"M d, Y" }}</td>
+                        <td>{{ item.application.program_name }}</td>
                         <td>
-                            <span style="color: var(--text-muted); font-size: 0.875rem;">Certificate not created yet</span>
+                            <div style="font-weight: 600; color: var(--success);">{{ item.percentage }}%</div>
+                        </td>
+                        <td>
+                            <form method="post" action="{% url 'coordinator:request_certificate' item.application.id %}" style="margin: 0;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-paper-plane"></i> Request Certificate
+                                </button>
+                            </form>
                         </td>
                     </tr>
                     {% endfor %}

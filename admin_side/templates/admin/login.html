@@ -1,367 +1,553 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Login | Smart Internship</title>
-    
+    <title>Log In | Smart Internship</title>
+
     <!-- Google Fonts - Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    
-    <!-- Custom CSS -->
+
+    <!-- Vanta.js Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/tengbao/vanta@master/dist/vanta.birds.min.js"></script>
+
     {% load static %}
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="stylesheet" href="{% static 'css/animations.css' %}">
-    
     <style>
-        /* Login Page Specific Styles */
-        .login-page {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, var(--gray-900) 0%, var(--gray-800) 50%, var(--primary-900) 100%);
-            padding: var(--space-6);
+        :root {
+            --primary-blue: #e7f1ff;
+            --brand-blue: #0066ff;
+            --text-dark: #1a1a1a;
+            --text-muted: #666666;
+            --border-color: #e5e7eb;
+            --bg-light: #ffffff;
         }
 
-        .login-card {
-            width: 100%;
-            max-width: 420px;
-            background: var(--bg-primary);
-            border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-xl);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            height: 100vh;
+            display: flex;
             overflow: hidden;
         }
 
-        .login-header {
-            background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
-            padding: var(--space-8);
-            text-align: center;
+        .login-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
         }
 
-        .login-logo {
-            width: 72px;
-            height: 72px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: var(--radius-lg);
+        /* Form Side */
+        .form-side {
+            flex: 0 0 55%;
+            display: flex;
+            flex-direction: column;
+            padding: 60px 10%;
+            background: white;
+            position: relative;
+            z-index: 10;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .form-side>* {
+            position: relative;
+            z-index: 2;
+        }
+
+        #vanta-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--text-dark);
+            position: absolute;
+            top: 40px;
+            left: 10%;
+        }
+
+        .logo-box {
+            width: 32px;
+            height: 32px;
+            background-color: var(--brand-blue);
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto var(--space-4);
-            font-size: 2rem;
             color: white;
-        }
-
-        .login-header h1 {
-            color: white;
-            font-size: 1.5rem;
-            margin-bottom: var(--space-2);
-        }
-
-        .login-header p {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 0.875rem;
-        }
-
-        /* Role Toggle Tabs */
-        .role-tabs {
-            display: flex;
-            border-bottom: 1px solid var(--border-light);
-            background: var(--bg-secondary);
-        }
-
-        .role-tab {
-            flex: 1;
-            padding: var(--space-4);
-            text-align: center;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: all var(--transition-fast);
-            border: none;
-            background: transparent;
-            position: relative;
-        }
-
-        .role-tab:hover {
-            color: var(--text-primary);
-            background: rgba(0, 0, 0, 0.03);
-        }
-
-        .role-tab.active {
-            color: var(--primary-600);
-            background: var(--bg-primary);
-        }
-
-        .role-tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: -1px;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--primary-500), var(--primary-600));
-            border-radius: 3px 3px 0 0;
-        }
-
-        .role-tab i {
-            display: block;
-            font-size: 1.25rem;
-            margin-bottom: var(--space-1);
-        }
-
-        /* Login Form */
-        .login-form {
-            padding: var(--space-8);
-        }
-
-        .login-form .form-group {
-            margin-bottom: var(--space-5);
-        }
-
-        .login-form .form-label {
-            display: block;
-            margin-bottom: var(--space-2);
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--text-primary);
-        }
-
-        .login-form .form-control {
-            width: 100%;
-            padding: var(--space-3) var(--space-4);
-            font-size: 0.9375rem;
-            border: 1px solid var(--border-medium);
-            border-radius: var(--radius-md);
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            transition: all var(--transition-fast);
-        }
-
-        .login-form .form-control:focus {
-            outline: none;
-            border-color: var(--primary-500);
-            box-shadow: 0 0 0 3px rgba(52, 117, 215, 0.15);
-        }
-
-        .login-form .form-control::placeholder {
-            color: var(--text-muted);
-        }
-
-        .login-error {
-            background: var(--error-light);
-            color: var(--error-dark);
-            padding: var(--space-3) var(--space-4);
-            border-radius: var(--radius-md);
-            margin-bottom: var(--space-5);
-            font-size: 0.875rem;
-            display: flex;
-            align-items: center;
-            gap: var(--space-2);
-        }
-
-        .login-success {
-            background: var(--success-light);
-            color: var(--success-dark);
-            padding: var(--space-3) var(--space-4);
-            border-radius: var(--radius-md);
-            margin-bottom: var(--space-5);
-            font-size: 0.875rem;
-            display: flex;
-            align-items: center;
-            gap: var(--space-2);
-        }
-
-        .btn-lg {
-            padding: var(--space-4) var(--space-6);
             font-size: 1rem;
         }
 
-        .w-full {
+        .login-box {
+            max-width: 400px;
             width: 100%;
         }
 
-        .remember-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: var(--space-6);
+        .login-box h1 {
+            font-size: 2.25rem;
+            margin-bottom: 40px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
             font-size: 0.875rem;
-        }
-
-        .remember-row label {
-            display: flex;
-            align-items: center;
-            gap: var(--space-2);
-            cursor: pointer;
-            color: var(--text-secondary);
-        }
-
-        .remember-row input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            accent-color: var(--primary-500);
-        }
-
-        .remember-row a {
-            color: var(--primary-600);
-        }
-
-        .login-footer {
-            padding: var(--space-6) var(--space-8);
-            background: var(--bg-secondary);
-            text-align: center;
-            border-top: 1px solid var(--border-light);
-        }
-
-        .login-footer p {
             color: var(--text-muted);
-            font-size: 0.875rem;
-            margin-bottom: var(--space-3);
-        }
-
-        .login-footer a {
-            color: var(--primary-600);
+            margin-bottom: 8px;
             font-weight: 500;
         }
 
-        /* Role indicator hidden input */
-        #role-input {
-            display: none;
+        .form-control {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            color: var(--text-dark);
+            background: #fdfdfd;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--brand-blue);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(0, 102, 255, 0.1);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--brand-blue);
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #ffffff;
+            cursor: pointer;
+            margin-top: 24px;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .btn-submit:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+            background-color: #0052cc;
+        }
+
+        .form-footer {
+            position: absolute;
+            bottom: 40px;
+            left: 10%;
+            right: 10%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .form-footer a {
+            color: var(--brand-blue);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer-links a {
+            margin-left: 20px;
+            color: var(--text-muted);
+        }
+
+        /* Right Side: Improved Carousel */
+        .image-side {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            transition: transform 1.2s cubic-bezier(0.65, 0, 0.35, 1);
+            transform: translateX(100%);
+            display: flex;
+            align-items: flex-end;
+            padding: 80px 60px;
+            color: white;
+        }
+
+        .slide.active {
+            transform: translateX(0);
+            z-index: 2;
+        }
+
+        .slide.prev {
+            transform: translateX(-100%);
+            z-index: 1;
+        }
+
+        .slide::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.7));
+        }
+
+        .slide-content {
+            position: relative;
+            z-index: 5;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease 0.6s;
+        }
+
+        .slide.active .slide-content {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .slide-content h2 {
+            font-size: 2.75rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .slide-content p {
+            font-size: 1.15rem;
+            line-height: 1.6;
+            opacity: 0.9;
+            max-width: 500px;
+        }
+
+        /* Carousel Cells/Dots */
+        .carousel-nav {
+            position: absolute;
+            bottom: 60px;
+            left: 60px;
+            display: flex;
+            gap: 12px;
+            z-index: 10;
+        }
+
+        .dot {
+            width: 32px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .dot.active {
+            background: white;
+            width: 48px;
+        }
+
+        /* Snackbar Logic */
+        #snackbar {
+            visibility: hidden;
+            min-width: 320px;
+            background-color: #1a1a1a;
+            color: #fff;
+            text-align: left;
+            border-radius: 12px;
+            padding: 16px 20px;
+            position: fixed;
+            z-index: 1000;
+            left: 40px;
+            bottom: -100px;
+            font-size: 0.95rem;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            border-left: 5px solid transparent;
+        }
+
+        #snackbar.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 40px;
+        }
+
+        #snackbar.error {
+            border-left-color: #ff4d4f;
+        }
+
+        #snackbar.success {
+            border-left-color: #2ed573;
+        }
+
+        #snackbar.warning {
+            border-left-color: #ffa502;
+        }
+
+        #snackbar.info {
+            border-left-color: #70a1ff;
+        }
+
+        #snackbar i {
+            font-size: 1.25rem;
+        }
+
+        .snackbar-content {
+            flex: 1;
+        }
+
+        .snackbar-close {
+            cursor: pointer;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+
+        .snackbar-close:hover {
+            opacity: 1;
+        }
+
+        @media (max-width: 992px) {
+            .image-side {
+                display: none;
+            }
+
+            .form-side {
+                flex: 1;
+                padding: 60px 40px;
+            }
         }
     </style>
 </head>
+
 <body>
-    <div class="login-page">
-        <div class="login-card">
-            <div class="login-header">
-                <div class="login-logo">
+    <div class="login-container">
+        <!-- Form Side -->
+        <div class="form-side" id="vanta-target">
+            <div id="vanta-bg"></div>
+            <div class="brand-logo">
+                <div class="logo-box">
                     <i class="fas fa-graduation-cap"></i>
                 </div>
-                <h1>Smart Internship</h1>
-                <p>Sign in to access your dashboard</p>
+                Smart Internship
             </div>
-            
-            <!-- Role Toggle Tabs -->
-            <div class="role-tabs">
-                <button type="button" class="role-tab active" data-role="STUDENT" onclick="switchRole('STUDENT')">
-                    <i class="fas fa-user-graduate"></i>
-                    Student
-                </button>
-                <button type="button" class="role-tab" data-role="COORDINATOR" onclick="switchRole('COORDINATOR')">
-                    <i class="fas fa-chalkboard-teacher"></i>
-                    Coordinator
-                </button>
-                <button type="button" class="role-tab" data-role="ADMIN" onclick="switchRole('ADMIN')">
-                    <i class="fas fa-user-shield"></i>
-                    Admin
-                </button>
-            </div>
-            
-            <form method="post" action="" class="login-form">
-                {% csrf_token %}
-                
-                <!-- Hidden role input -->
-                <input type="hidden" name="role" id="role-input" value="STUDENT">
-                
-                {% if request.GET.next %}
+
+            <div class="login-box">
+                <h1>Log In</h1>
+
+                <div id="snackbar">
+                    <i id="snackbar-icon" class="fas"></i>
+                    <div class="snackbar-content" id="snackbar-msg"></div>
+                    <i class="fas fa-times snackbar-close" onclick="hideSnackbar()"></i>
+                </div>
+
+                <form method="post" action="">
+                    {% csrf_token %}
+
+                    {% if request.GET.next %}
                     <input type="hidden" name="next" value="{{ request.GET.next }}">
-                {% endif %}
-                
-                {% if error %}
-                <div class="login-error">
-                    <i class="fas fa-exclamation-circle"></i>
-                    {{ error }}
+                    {% endif %}
+
+                    <div class="form-group">
+                        <label class="form-label">Your work username</label>
+                        <input type="text" name="username" class="form-control" placeholder="Enter username" required
+                            autocomplete="username">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control" placeholder="Enter your password"
+                            required autocomplete="current-password">
+                    </div>
+
+                    <button type="submit" class="btn-submit">Log In</button>
+
+                </form>
+            </div>
+
+            <div class="form-footer">
+                <div>New Student? <a href="{% url 'register' %}">Sign Up</a></div>
+                <div class="footer-links">
+
                 </div>
-                {% endif %}
-                
-                {% if success %}
-                <div class="login-success">
-                    <i class="fas fa-check-circle"></i>
-                    {{ success }}
+            </div>
+        </div>
+
+        <!-- Image Side with Stacked Carousel -->
+        <div class="image-side">
+            <!-- Slide 1 -->
+            <div class="slide active"
+                style="background-image: url('https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&q=80&w=1470');">
+                <div class="slide-content">
+                    <h2>Empower your career.</h2>
+                    <p>Join thousands of students and companies in the leading internship management platform.</p>
                 </div>
-                {% endif %}
-                
-                <div class="form-group">
-                    <label class="form-label" for="username">
-                        <i class="fas fa-user" style="margin-right: 8px;"></i>
-                        Username
-                    </label>
-                    <input type="text" 
-                           id="username" 
-                           name="username" 
-                           class="form-control" 
-                           placeholder="Enter your username" 
-                           required 
-                           autocomplete="username">
+            </div>
+            <!-- Slide 2 -->
+            <div class="slide"
+                style="background-image: url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=1471');">
+                <div class="slide-content">
+                    <h2>Build connections.</h2>
+                    <p>Work directly with top-tier institutions and coordinators to bridge the gap between education and
+                        industry.</p>
                 </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="password">
-                        <i class="fas fa-lock" style="margin-right: 8px;"></i>
-                        Password
-                    </label>
-                    <input type="password" 
-                           id="password" 
-                           name="password" 
-                           class="form-control" 
-                           placeholder="Enter your password" 
-                           required 
-                           autocomplete="current-password">
+            </div>
+            <!-- Slide 3 -->
+            <div class="slide"
+                style="background-image: url('https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=1470');">
+                <div class="slide-content">
+                    <h2>Verify success.</h2>
+                    <p>Track your attendance, manage your applications, and receive industry-recognized certificates in
+                        one place.</p>
                 </div>
-                
-                <div class="remember-row">
-                    <label>
-                        <input type="checkbox" name="remember">
-                        Remember me
-                    </label>
-                    <a href="#">Forgot password?</a>
-                </div>
-                
-                <button type="submit" class="btn btn-primary btn-lg w-full">
-                    <i class="fas fa-sign-in-alt"></i>
-                    Sign In
-                </button>
-            </form>
-            
-            <div class="login-footer" id="student-register-link">
-                <p>Don't have an account?</p>
-                <a href="{% url 'register' %}">Register as Student</a>
+            </div>
+
+            <div class="carousel-nav">
+                <div class="dot active" onclick="goToSlide(0)"></div>
+                <div class="dot" onclick="goToSlide(1)"></div>
+                <div class="dot" onclick="goToSlide(2)"></div>
             </div>
         </div>
     </div>
 
     <script>
-        function switchRole(role) {
-            // Update hidden input
-            document.getElementById('role-input').value = role;
-            
-            // Update active tab
-            document.querySelectorAll('.role-tab').forEach(tab => {
-                tab.classList.remove('active');
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const dots = document.querySelectorAll('.dot');
+        const totalSlides = slides.length;
+
+        function updateCarousel(prevIndex) {
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active', 'prev');
+                if (index === currentSlide) {
+                    slide.classList.add('active');
+                } else if (index === prevIndex) {
+                    slide.classList.add('prev');
+                }
             });
-            document.querySelector(`[data-role="${role}"]`).classList.add('active');
-            
-            // Show/hide register link (only for students)
-            const registerLink = document.getElementById('student-register-link');
-            if (role === 'STUDENT') {
-                registerLink.style.display = 'block';
-            } else {
-                registerLink.style.display = 'none';
-            }
+
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentSlide);
+            });
         }
-        
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            switchRole('STUDENT');
-        });
+
+        function nextSlide() {
+            const prevIndex = currentSlide;
+            currentSlide = (currentSlide + 1) % totalSlides;
+            updateCarousel(prevIndex);
+        }
+
+        function goToSlide(index) {
+            if (index === currentSlide) return;
+            const prevIndex = currentSlide;
+            currentSlide = index;
+            updateCarousel(prevIndex);
+            clearInterval(slideInterval);
+            slideInterval = setInterval(nextSlide, 5000);
+        }
+
+        let slideInterval = setInterval(nextSlide, 5000);
+
+        // Snackbar Functionality
+        function showSnackbar(message, type = 'info') {
+            if (!message || message.trim() === "" || message === "None") return;
+
+            console.log("Showing Snackbar:", message, type);
+            const snackbar = document.getElementById("snackbar");
+            const msgEl = document.getElementById("snackbar-msg");
+            const iconEl = document.getElementById("snackbar-icon");
+
+            msgEl.textContent = message;
+            snackbar.className = "show " + type;
+
+            // Set Icon
+            if (type === 'success') iconEl.className = "fas fa-check-circle";
+            else if (type === 'error') iconEl.className = "fas fa-exclamation-circle";
+            else if (type === 'warning') iconEl.className = "fas fa-exclamation-triangle";
+            else iconEl.className = "fas fa-info-circle";
+
+            setTimeout(function () {
+                hideSnackbar();
+            }, 6000);
+        }
+
+        function hideSnackbar() {
+            const snackbar = document.getElementById("snackbar");
+            snackbar.className = snackbar.className.replace("show", "");
+        }
+
+        // Trigger notifications based on Django context
+        window.onload = function () {
+            // Initialize Vanta BIRDS
+            VANTA.BIRDS({
+                el: "#vanta-target",
+                mouseControls: true,
+                touchControls: true,
+                gyroControls: true,
+                minHeight: 200.00,
+                minWidth: 200.00,
+                scale: 2.00,
+                scaleMobile: 1.00,
+                backgroundColor: 0xffffff,
+                color1: 0x5a9eff,
+                color2: 0x5a9eff,
+                birdSize: 1.50,
+                wingSpan: 20.00,
+                separation: 50.00,
+                alignment: 50.00,
+                cohesion: 50.00,
+                quantity: 3.00
+            });
+
+            
+            const errorMsg = "{% if error %}{{ error|escapejs }}{% else %}{{ request.GET.error|escapejs }}{% endif %}";
+            const successMsg = "{% if success %}{{ success|escapejs }}{% elif request.GET.registered == '1' %}Registration successful! Login with Username and Password.{% else %}{{ request.GET.registered|escapejs }}{% endif %}";
+            const errorType = "{% if warning %}warning{% elif danger %}error{% else %}error{% endif %}";
+
+            if (errorMsg && errorMsg !== "None" && errorMsg !== "") {
+                showSnackbar(errorMsg, errorType);
+            }
+
+            if (successMsg && successMsg !== "None" && successMsg !== "") {
+                showSnackbar(successMsg, "success");
+            }
+        };
     </script>
 </body>
+
 </html>

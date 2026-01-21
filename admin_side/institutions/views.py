@@ -12,13 +12,13 @@ def institution_list(request):
 
 @admin_required
 def institution_detail(request, id):
-    """View institution details with students and coordinators"""
+    """View company details with students and coordinators"""
     institution = get_object_or_404(Institution, id=id)
     
-    # Get students belonging to this institution
+    # Get students belonging to this company
     students = User.objects.filter(institution=institution, role='STUDENT')
     
-    # Get all coordinators assigned to this institution
+    # Get all coordinators assigned to this company
     coordinators = institution.assigned_coordinators
     
     # Get courses and internships for this institution
@@ -35,45 +35,103 @@ def institution_detail(request, id):
 
 @admin_required
 def add_institution(request):
-    coordinators = User.objects.filter(role='COORDINATOR')
-
     if request.method == 'POST':
-        Institution.objects.create(
+        # Get HR coordinator account details
+        hr_username = request.POST.get('hr_username', '').strip()
+        hr_password = request.POST.get('hr_password', '')
+        hr_password_confirm = request.POST.get('hr_password_confirm', '')
+        hr_name = request.POST.get('hr_coordinator_name', '').strip()
+        hr_email = request.POST.get('hr_coordinator_email', '').strip()
+        hr_phone = request.POST.get('hr_coordinator_phone', '').strip()
+        
+        # Validation
+        errors = []
+        if not hr_username:
+            errors.append("HR Coordinator username is required")
+        elif User.objects.filter(username=hr_username).exists():
+            errors.append("Username already exists. Please choose a different username.")
+        
+        if not hr_password:
+            errors.append("Password is required")
+        elif len(hr_password) < 8:
+            errors.append("Password must be at least 8 characters")
+        elif hr_password != hr_password_confirm:
+            errors.append("Passwords do not match")
+        
+        if not hr_name:
+            errors.append("HR Coordinator name is required")
+        
+        if not hr_email:
+            errors.append("HR Coordinator email is required")
+        elif User.objects.filter(email=hr_email).exists():
+            errors.append("Email already exists. Please use a different email.")
+        
+        if errors:
+            from django.contrib import messages
+            for error in errors:
+                messages.error(request, error)
+            return render(request, 'admin/add_institution.html', {
+                'form_data': request.POST
+            })
+        
+        # Split name into first and last name
+        name_parts = hr_name.split(' ', 1)
+        first_name = name_parts[0]
+        last_name = name_parts[1] if len(name_parts) > 1 else ''
+        
+        # Create the HR Coordinator user account
+        hr_coordinator = User.objects.create_user(
+            username=hr_username,
+            email=hr_email,
+            password=hr_password,
+            first_name=first_name,
+            last_name=last_name,
+            role='COORDINATOR',
+            phone=hr_phone or None,
+            approval_status='APPROVED'
+        )
+        
+        # Create the Institution/Company with HR coordinator assigned
+        institution = Institution.objects.create(
             name=request.POST['name'],
             location=request.POST['location'],
             email=request.POST.get('email') or None,
             phone=request.POST.get('phone') or None,
-            principal_name=request.POST.get('principal_name') or None,
-            principal_phone=request.POST.get('principal_phone') or None,
-            principal_email=request.POST.get('principal_email') or None,
-            coordinator_id=request.POST.get('coordinator') or None
+            hr_coordinator_name=hr_name,
+            hr_coordinator_phone=hr_phone or None,
+            hr_coordinator_email=hr_email,
+            coordinator=hr_coordinator  # Assign the created coordinator
         )
+        
+        # Also set the institution for the coordinator
+        hr_coordinator.institution = institution
+        hr_coordinator.save()
+        
+        from django.contrib import messages
+        messages.success(request, f'Company "{institution.name}" and HR Coordinator "{hr_username}" created successfully!')
         return redirect('institution_list')
 
-    return render(request, 'admin/add_institution.html', {
-        'coordinators': coordinators
-    })
+    return render(request, 'admin/add_institution.html', {})
 
 @admin_required
 def edit_institution(request, id):
     institution = get_object_or_404(Institution, id=id)
-    coordinators = User.objects.filter(role='COORDINATOR')
 
     if request.method == 'POST':
         institution.name = request.POST['name']
         institution.location = request.POST['location']
         institution.email = request.POST.get('email') or None
         institution.phone = request.POST.get('phone') or None
-        institution.principal_name = request.POST.get('principal_name') or None
-        institution.principal_phone = request.POST.get('principal_phone') or None
-        institution.principal_email = request.POST.get('principal_email') or None
-        institution.coordinator_id = request.POST.get('coordinator') or None
+        institution.hr_coordinator_name = request.POST.get('hr_coordinator_name') or None
+        institution.hr_coordinator_phone = request.POST.get('hr_coordinator_phone') or None
+        institution.hr_coordinator_email = request.POST.get('hr_coordinator_email') or None
         institution.save()
+        from django.contrib import messages
+        messages.success(request, f'Company "{institution.name}" updated successfully!')
         return redirect('institution_list')
 
     return render(request, 'admin/edit_institution.html', {
         'institution': institution,
-        'coordinators': coordinators
     })
 
 @admin_required
@@ -84,7 +142,7 @@ def delete_institution(request, id):
 
 @admin_required
 def toggle_institution_status(request, id):
-    """Toggle institution active/inactive status"""
+    """Toggle company active/inactive status"""
     institution = get_object_or_404(Institution, id=id)
     institution.is_active = not institution.is_active
     institution.save()

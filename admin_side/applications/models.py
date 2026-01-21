@@ -18,8 +18,8 @@ class Application(models.Model):
         limit_choices_to={'role': 'STUDENT'},
         related_name='applications'
     )
-    course = models.ForeignKey(Course, null=True, blank=True, on_delete=models.SET_NULL)
-    internship = models.ForeignKey(Internship, null=True, blank=True, on_delete=models.SET_NULL)
+    course = models.ForeignKey(Course, null=True, blank=True, on_delete=models.CASCADE)
+    internship = models.ForeignKey(Internship, null=True, blank=True, on_delete=models.CASCADE)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
     applied_at = models.DateTimeField(auto_now_add=True)
     reviewed_at = models.DateTimeField(blank=True, null=True)
@@ -32,6 +32,7 @@ class Application(models.Model):
     )
     notes = models.TextField(blank=True, null=True, help_text="Notes from reviewer")
     student_remarks = models.TextField(blank=True, null=True, help_text="Remarks from student")
+    highest_qualification_other = models.CharField(max_length=100, blank=True, null=True, help_text='Custom qualification if Other is selected')
 
     class Meta:
         verbose_name = 'Application'

@@ -100,7 +100,7 @@
                                 {% endif %}
                             </td>
                             <td>
-                                {% if cert.can_download %}
+                                {% if cert.can_download_status %}
                                 <a href="{% url 'student:download_certificate' cert.id %}" class="btn btn-success btn-sm">
                                     <i class="fas fa-download"></i> Download
                                 </a>

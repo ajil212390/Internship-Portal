@@ -1,97 +1,108 @@
 {% extends 'coordinator/base.html' %}
-{% block title %}Certificate Eligible Students - Coordinator{% endblock %}
+{% block title %}Eligible Students{% endblock %}
+{% block page_title %}Certificate Eligibility{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h2><i class="fas fa-certificate me-2"></i>Certificate Eligible Students</h2>
-            <p class="text-muted">Students with ≥75% attendance who are eligible for certificates</p>
-        </div>
-    </div>
-
-    <!-- Stats -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card bg-success text-white">
-                <div class="card-body text-center">
-                    <h3>{{ total_eligible }}</h3>
-                    <p class="mb-0">Total Eligible Students</p>
+<!-- Welcome Section -->
+<div class="card" style="margin-bottom: var(--space-6);">
+    <div class="card-body">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 style="margin-bottom: var(--space-1);">Eligible for Certificate</h3>
+                <p style="color: var(--text-secondary);">Students with ≥75% attendance criteria met</p>
+            </div>
+            <div class="stat-card" style="box-shadow: none; border: 1px solid var(--primary-100); background: var(--primary-50); padding: var(--space-4) var(--space-6);">
+                <div class="stat-content">
+                    <span class="stat-label">Qualified</span>
+                    <span class="stat-value" style="font-size: 1.5rem; color: var(--primary-700);">{{ total_eligible }}</span>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0"><i class="fas fa-users me-2"></i>Eligible Students (≥75% Attendance)</h5>
-            <a href="{% url 'coordinator:attendance_report' %}" class="btn btn-outline-primary">
-                <i class="fas fa-chart-bar me-2"></i>Full Report
-            </a>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Student</th>
-                            <th>Program</th>
-                            <th>Attendance %</th>
-                            <th>Certificate Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in eligible_list %}
-                        <tr>
-                            <td>
-                                <strong>{{ item.student.get_full_name|default:item.student.username }}</strong>
-                                <br><small class="text-muted">{{ item.student.email }}</small>
-                            </td>
-                            <td>{{ item.program_name }}</td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="progress flex-grow-1 me-2" style="height: 8px; max-width: 100px;">
-                                        <div class="progress-bar bg-success" style="width: {{ item.percentage }}%;"></div>
-                                    </div>
-                                    <strong class="text-success">{{ item.percentage }}%</strong>
+<!-- Main Content -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-users" style="margin-right: 8px;"></i>Qualifying Students</h3>
+        <a href="{% url 'coordinator:attendance_report' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-chart-bar"></i> Full Report
+        </a>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Program Name</th>
+                        <th style="width: 150px;">Attendance</th>
+                        <th>Cert. Status</th>
+                        <th style="text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in eligible_list %}
+                    <tr>
+                        <td>
+                            <strong>{{ item.student.get_full_name|default:item.student.username }}</strong>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ item.student.email }}</div>
+                        </td>
+                        <td>
+                            {{ item.program_name }}
+                        </td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: var(--space-2);">
+                                <div style="flex: 1; height: 6px; background: var(--gray-200); border-radius: 3px; overflow: hidden;">
+                                    <div style="height: 100%; width: {{ item.percentage }}%; background: var(--success);"></div>
                                 </div>
-                            </td>
-                            <td>
-                                {% if item.has_certificate %}
-                                    {% if item.certificate_status == 'ISSUED' %}
-                                        <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Issued</span>
-                                    {% elif item.certificate_status == 'APPROVED' %}
-                                        <span class="badge bg-info"><i class="fas fa-thumbs-up me-1"></i>Approved</span>
-                                    {% else %}
-                                        <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Pending</span>
-                                    {% endif %}
+                                <span style="font-weight: 600; font-size: 0.8125rem; color: var(--success-dark);">{{ item.percentage }}%</span>
+                            </div>
+                        </td>
+                        <td>
+                            {% if item.has_certificate %}
+                                {% if item.certificate_status == 'ISSUED' %}
+                                    <span class="badge badge-success"><i class="fas fa-check-double" style="margin-right: 4px;"></i>Issued</span>
+                                {% elif item.certificate_status == 'APPROVED' %}
+                                    <span class="badge badge-info"><i class="fas fa-check" style="margin-right: 4px;"></i>Approved</span>
                                 {% else %}
-                                    <span class="badge bg-secondary"><i class="fas fa-minus me-1"></i>Not Created</span>
+                                    <span class="badge badge-warning"><i class="fas fa-clock" style="margin-right: 4px;"></i>Pending</span>
                                 {% endif %}
-                            </td>
-                            <td>
-                                {% if item.has_certificate %}
-                                    <a href="{% url 'coordinator:certificates' %}" class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-eye me-1"></i>View
-                                    </a>
-                                {% else %}
-                                    <span class="text-muted small">Awaiting admin creation</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="5" class="text-center py-4">
-                                <i class="fas fa-certificate fa-3x text-muted mb-3"></i>
-                                <p class="text-muted">No eligible students found</p>
-                                <p class="text-muted small">Students need ≥75% attendance to be eligible</p>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                            {% else %}
+                                <span class="badge badge-neutral">Not Created</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: right;">
+                            {% if item.certificate_status == 'ISSUED' %}
+                                <a href="{% url 'coordinator:certificates' %}" class="btn btn-secondary btn-sm">
+                                    <i class="fas fa-eye"></i> View Issued
+                                </a>
+                            {% elif item.certificate_status == 'APPROVED' %}
+                                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">
+                                    <i class="fas fa-clock"></i> Awaiting Admin
+                                </span>
+                            {% else %}
+                                <form method="post" action="{% url 'coordinator:request_certificate' item.application.id %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-certificate"></i> Approve for Cert
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">
+                            <div style="padding: var(--space-12); text-align: center; color: var(--text-muted);">
+                                <i class="fas fa-award" style="font-size: 3.5rem; margin-bottom: var(--space-4); opacity: 0.1;"></i>
+                                <p>No students have reached the 75% attendance threshold yet.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>

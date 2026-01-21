@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=800,initial-scale=1" />
+  <title>Certificate Preview</title>
+  <style>
+    html,body { height:100%; margin:0; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial; background:#f4f4f6; display:flex; align-items:center; justify-content:center; }
+    .certificate-viewport { width:800px; height:600px; display:flex; align-items:center; justify-content:center; }
+
+    .outer {
+      width:100%; height:100%;
+      box-sizing:border-box;
+      border:15px solid #000080; /* Dark Blue outer border */
+      background: #fff; /* white inside */
+      padding: 12px; /* whitespace inside the blue border */
+      display:flex; align-items:center; justify-content:center;
+    }
+
+    .inner {
+      width: calc(100% - 24px);
+      height: calc(100% - 24px);
+      box-sizing:border-box;
+      border:4px solid #FFD700; /* Gold/Yellow inner border */
+      display:flex; align-items:center; justify-content:center;
+      padding: 28px; /* inner spacing for content */
+    }
+
+    .content { width:100%; text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+
+    .student-name { font-size:54px; font-weight:800; color:#000; margin: 4px 0 8px; letter-spacing:0.5px; }
+    .support { font-size:20px; color:#6b6b6b; margin: 0 0 12px; }
+    .course-name { font-size:44px; font-weight:700; color:#0A64DC; margin: 6px 0 18px; }
+    .description { max-width:640px; font-size:16px; color:#4b4b4b; line-height:1.45; margin: 8px 0 20px; text-align:center; }
+    .footer { font-size:14px; color:#777; margin-top:10px; }
+
+    @media print {
+      html,body { background: #fff; }
+      .certificate-viewport { zoom: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="certificate-viewport">
+    <div class="outer">
+      <div class="inner">
+        <div class="content">
+          <div class="student-name">{{ student_name|default:"YOUR NAME" }}</div>
+          <div class="support">has successfully completed the program in</div>
+          <div class="course-name">{{ course_name|default:"Course Name" }}</div>
+          <div class="description">
+            This certificate is awarded to <strong>{{ student_name|default:"YOUR NAME" }}</strong> for completing <strong>{{ course_name|default:"Course Name" }}</strong>.
+            They have demonstrated a thorough understanding of the curriculum and met all the necessary requirements with dedication and excellence.
+          </div>
+          <div class="footer">Organized by: Royal College</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -5,7 +5,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from io import BytesIO
 
-def generate_single_certificate(name, template_path, x, y, font_size, course_name=None, institution_name=None):
+def generate_single_certificate(name, template_path, x, y, font_size, course_name=None, institution_name=None, logo_path=None, **kwargs):
     """
     Generates a single PDF certificate in memory with student name and optional course/institution details.
     
@@ -17,6 +17,7 @@ def generate_single_certificate(name, template_path, x, y, font_size, course_nam
         font_size: Font size for the student name
         course_name: Optional course name to display
         institution_name: Optional institution name to display
+        logo_path: Optional path to company logo image
     """
     buffer = BytesIO()
     
@@ -27,13 +28,9 @@ def generate_single_certificate(name, template_path, x, y, font_size, course_nam
     c = canvas.Canvas(buffer, pagesize=landscape(A4))
     
     # SAFETY CHECK: Ensure Y is within page boundaries
-    # Page height is 595. If Y is > 595 or < 0, text won't show.
-    # We'll clamp it to a safe range (e.g., 50 to 550)
     if y > page_height - 50:
-        print(f"Warning: Y coordinate {y} is too high. Resetting to center.")
         y = page_height / 2
     elif y < 50:
-        print(f"Warning: Y coordinate {y} is too low. Resetting to center.")
         y = page_height / 2
     
     # 1. Draw the Background Image FIRST
@@ -42,50 +39,67 @@ def generate_single_certificate(name, template_path, x, y, font_size, course_nam
         c.drawImage(bg, 0, 0, width=page_width, height=page_height, preserveAspectRatio=True, mask='auto')
     except Exception as e:
         print(f"Error loading certificate template image: {e}")
-        # Draw a simple border if image fails
         c.setStrokeColorRGB(0.2, 0.4, 0.7)
         c.setLineWidth(3)
         c.rect(20, 20, page_width-40, page_height-40)
 
-    # 2. Draw the Student Name ON TOP of the image
-    # Use a larger font size to ensure visibility
-    actual_font_size = max(font_size, 40)  # Minimum 40pt
+    # 2. Draw Company Logo if provided (Top Right)
+    if logo_path:
+        try:
+            logo = ImageReader(logo_path)
+            # Define logo size and position
+            logo_w = 80
+            logo_h = 80
+            logo_x = page_width - logo_w - 50
+            logo_y = page_height - logo_h - 50
+            c.drawImage(logo, logo_x, logo_y, width=logo_w, height=logo_h, preserveAspectRatio=True, mask='auto')
+        except Exception as e:
+            print(f"Error loading logo image: {e}")
+
+    # 3. Draw the Student Name
+    actual_font_size = max(font_size, 40)
     c.setFont("Helvetica-Bold", actual_font_size)
-    c.setFillColorRGB(0, 0, 0)  # Pure black color
+    c.setFillColorRGB(0, 0, 0)
     
-    # Calculate text width for centering
     text_width = c.stringWidth(name, "Helvetica-Bold", actual_font_size)
-    
-    # Always center the text horizontally
     x_centered = (page_width - text_width) / 2
     
-    # Draw a semi-transparent white background behind the text for better visibility
-    padding = 10
-    c.setFillColorRGB(1, 1, 1, alpha=0.8)  # White with 80% opacity
-    c.rect(x_centered - padding, y - padding, text_width + (2 * padding), actual_font_size + (2 * padding), fill=1, stroke=0)
-    
-    # Draw the student name in BLACK
-    c.setFillColorRGB(0, 0, 0)  # Black
+    # Draw an opaque white background band behind the name to cover template placeholders
+    padding = 20
+    cover_width = page_width * 0.85
+    cover_x = (page_width - cover_width) / 2
+    cover_height = actual_font_size + (4 * padding)
+    cover_y = y - (2 * padding)
+    c.setFillColorRGB(1, 1, 1)
+    c.rect(cover_x, cover_y, cover_width, cover_height, fill=1, stroke=0)
+
+    # Draw the student name on top
+    c.setFillColorRGB(0, 0, 0)
     c.drawString(x_centered, y, name)
     
-    # 3. Add course name if provided (below the student name)
+    # 4. Add course name if provided
     if course_name:
-        course_font_size = max(actual_font_size - 20, 20)  # Smaller than name but readable
-        c.setFont("Helvetica", course_font_size)
-        c.setFillColorRGB(0.2, 0.2, 0.2)  # Dark gray
-        course_text = f"{course_name}"
-        course_width = c.stringWidth(course_text, "Helvetica", course_font_size)
-        c.drawString((page_width - course_width) / 2, y - 50, course_text)
+        c.setFont("Helvetica", 20)
+        c.setFillColorRGB(0.2, 0.2, 0.2)
+        success_text = "has successfully completed the program in"
+        c.drawString((page_width - c.stringWidth(success_text, "Helvetica", 20)) / 2, y - 50, success_text)
+        
+        c.setFont("Helvetica-Bold", 32)
+        c.setFillColorRGB(0, 0.4, 0.8)
+        c.drawString((page_width - c.stringWidth(course_name, "Helvetica-Bold", 32)) / 2, y - 100, course_name)
     
-    # 4. Add institution name if provided (at bottom)
+    # 5. Add institution details (Issue date removed per request)
+    info_y = y - 160
+    c.setFont("Helvetica", 16)
+    c.setFillColorRGB(0.3, 0.3, 0.3)
+    
     if institution_name:
-        inst_font_size = 16
-        c.setFont("Helvetica-Oblique", inst_font_size)
-        c.setFillColorRGB(0.3, 0.3, 0.3)  # Medium gray
-        inst_width = c.stringWidth(institution_name, "Helvetica-Oblique", inst_font_size)
-        c.drawString((page_width - inst_width) / 2, 60, institution_name)
+        line = f"Organized by: {institution_name}"
+        c.drawString((page_width - c.stringWidth(line, "Helvetica", 16)) / 2, info_y, line)
+
+
     
-    # 5. Finalize
+    # 6. Finalize
     c.showPage()
     c.save()
     

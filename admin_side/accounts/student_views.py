@@ -35,21 +35,43 @@ def dashboard(request):
         courses = courses.filter(
             Q(name__icontains=query) |
             Q(description__icontains=query) |
-            Q(institution__name__icontains=query)
+            Q(institution__name__icontains=query) |
+            Q(institution__location__icontains=query)
         )
         internships = internships.filter(
             Q(title__icontains=query) |
             Q(description__icontains=query) |
-            Q(institution__name__icontains=query)
+            Q(institution__name__icontains=query) |
+            Q(institution__location__icontains=query)
         )
     
-    # Get recent applications
-    recent_applications = Application.objects.filter(student=student).order_by('-applied_at')[:5]
+    # Get recent applications (only for active programs)
+    recent_applications = Application.objects.filter(
+        student=student
+    ).filter(
+        Q(course__is_active=True) | Q(internship__is_active=True)
+    ).order_by('-applied_at')[:5]
     
-    # Stats
-    total_applications = Application.objects.filter(student=student).count()
-    approved_applications = Application.objects.filter(student=student, status='APPROVED').count()
-    pending_applications = Application.objects.filter(student=student, status='PENDING').count()
+    # Stats (only for active programs)
+    total_applications = Application.objects.filter(
+        student=student
+    ).filter(
+        Q(course__is_active=True) | Q(internship__is_active=True)
+    ).count()
+    
+    approved_applications = Application.objects.filter(
+        student=student, 
+        status='APPROVED'
+    ).filter(
+        Q(course__is_active=True) | Q(internship__is_active=True)
+    ).count()
+    
+    pending_applications = Application.objects.filter(
+        student=student, 
+        status='PENDING'
+    ).filter(
+        Q(course__is_active=True) | Q(internship__is_active=True)
+    ).count()
     
     context = {
         'courses': courses[:6],
@@ -60,6 +82,7 @@ def dashboard(request):
         'pending_applications': pending_applications,
         'query': query,
         'program_type': program_type,
+        'categories': Course.CATEGORY_CHOICES,
     }
     return render(request, 'student/dashboard.html', context)
 
@@ -70,6 +93,8 @@ def search_programs(request):
     query = request.GET.get('q', '')
     program_type = request.GET.get('type', 'all')
     institution = request.GET.get('institution', '')
+    location = request.GET.get('location', '')
+    category = request.GET.get('category', '')
     
     courses = Course.objects.filter(is_active=True)
     internships = Internship.objects.filter(is_active=True)
@@ -87,6 +112,14 @@ def search_programs(request):
     if institution:
         courses = courses.filter(institution__name__icontains=institution)
         internships = internships.filter(institution__name__icontains=institution)
+
+    if location:
+        courses = courses.filter(institution__location__icontains=location)
+        internships = internships.filter(institution__location__icontains=location)
+
+    if category:
+        courses = courses.filter(category=category)
+        internships = internships.filter(category=category)
     
     # Combine into unified list
     programs = []
@@ -122,8 +155,112 @@ def search_programs(request):
         'query': query,
         'program_type': program_type,
         'institution': institution,
+        'location': location,
+        'category': category,
+        'categories': Course.CATEGORY_CHOICES,
     }
     return render(request, 'student/programs.html', context)
+
+
+@student_required
+def api_search_programs(request):
+    """API endpoint for fast AJAX searching of programs"""
+    query = request.GET.get('q', '')
+    category = request.GET.get('category', '')
+    location = request.GET.get('location', '')
+    institution = request.GET.get('institution', '')
+    
+    courses = Course.objects.filter(is_active=True).select_related('institution')
+    internships = Internship.objects.filter(is_active=True).select_related('institution')
+    
+    if query:
+        courses = courses.filter(
+            Q(name__icontains=query) | 
+            Q(description__icontains=query) |
+            Q(institution__name__icontains=query)
+        )
+        internships = internships.filter(
+            Q(title__icontains=query) | 
+            Q(description__icontains=query) |
+            Q(institution__name__icontains=query)
+        )
+    
+    if category:
+        courses = courses.filter(category=category)
+        internships = internships.filter(category=category)
+        
+    if location:
+        courses = courses.filter(institution__location__icontains=location)
+        internships = internships.filter(institution__location__icontains=location)
+
+    if institution:
+        courses = courses.filter(institution__name__icontains=institution)
+        internships = internships.filter(institution__name__icontains=institution)
+        
+    results = []
+    for c in courses:
+        results.append({
+            'id': c.id,
+            'type': 'course',
+            'name': c.name,
+            'institution': c.institution.name,
+            'location': c.institution.location,
+            'category': c.get_category_display(),
+            'duration': f"{c.duration_days} days",
+            'seats': c.available_seats,
+            'url': f"/student/programs/{c.id}/?type=course"
+        })
+    for i in internships:
+        results.append({
+            'id': i.id,
+            'type': 'internship',
+            'name': i.title,
+            'institution': i.institution.name,
+            'location': i.institution.location,
+            'category': i.get_category_display(),
+            'duration': f"{i.duration} days",
+            'seats': i.available_seats,
+            'url': f"/student/programs/{i.id}/?type=internship"
+        })
+        
+    return JsonResponse({'results': results})
+
+
+@student_required
+def api_apply_program(request):
+    """API endpoint for quick application"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST method required'}, status=405)
+        
+    program_id = request.POST.get('id')
+    program_type = request.POST.get('type')
+    student = request.user
+    
+    if program_type == 'course':
+        program = get_object_or_404(Course, id=program_id, is_active=True)
+        existing = Application.objects.filter(student=student, course=program).exists()
+        if existing:
+            return JsonResponse({'error': 'Already applied'}, status=400)
+        
+        if program.available_seats <= 0:
+            return JsonResponse({'error': 'No seats available'}, status=400)
+            
+        Application.objects.create(student=student, course=program, status='PENDING')
+        return JsonResponse({'success': True, 'msg': f'Applied for {program.name}'})
+        
+    elif program_type == 'internship':
+        program = get_object_or_404(Internship, id=program_id, is_active=True)
+        existing = Application.objects.filter(student=student, internship=program).exists()
+        if existing:
+            return JsonResponse({'error': 'Already applied'}, status=400)
+            
+        if program.available_seats <= 0:
+            return JsonResponse({'error': 'No seats available'}, status=400)
+            
+        Application.objects.create(student=student, internship=program, status='PENDING')
+        return JsonResponse({'success': True, 'msg': f'Applied for {program.title}'})
+        
+    return JsonResponse({'error': 'Invalid type'}, status=400)
 
 
 @student_required
@@ -131,13 +268,48 @@ def program_list(request):
     """List all available programs (courses and internships)"""
     program_type = request.GET.get('type', 'all')
     
-    courses = Course.objects.filter(is_active=True)
-    internships = Internship.objects.filter(is_active=True)
+    courses = Course.objects.filter(is_active=True).select_related('institution')
+    internships = Internship.objects.filter(is_active=True).select_related('institution')
+    
+    # Combine into unified list for the template
+    programs = []
+    
+    if program_type in ['all', 'course']:
+        for course in courses:
+            programs.append({
+                'id': course.id,
+                'type': 'course',
+                'name': course.name,
+                'description': course.description,
+                'institution': course.institution.name,
+                'location': course.institution.location,
+                'duration': f"{course.duration_days} days",
+                'seats_available': course.available_seats,
+                'start_date': course.start_date,
+                'category': course.get_category_display(),
+            })
+    
+    if program_type in ['all', 'internship']:
+        for internship in internships:
+            programs.append({
+                'id': internship.id,
+                'type': 'internship',
+                'name': internship.title,
+                'description': internship.description,
+                'institution': internship.institution.name,
+                'location': internship.institution.location,
+                'duration': f"{internship.duration} days",
+                'seats_available': internship.available_seats,
+                'start_date': internship.start_date,
+                'category': internship.get_category_display(),
+            })
+    
+    # Shuffle or sort programs if needed, for now just list them
     
     context = {
-        'courses': courses if program_type in ['all', 'course'] else [],
-        'internships': internships if program_type in ['all', 'internship'] else [],
+        'programs': programs,
         'program_type': program_type,
+        'categories': Course.CATEGORY_CHOICES,
     }
     return render(request, 'student/programs.html', context)
 
@@ -231,7 +403,11 @@ def my_applications(request):
     student = request.user
     status_filter = request.GET.get('status', 'all')
     
-    applications = Application.objects.filter(student=student).order_by('-applied_at')
+    applications = Application.objects.filter(
+        student=student
+    ).filter(
+        Q(course__is_active=True) | Q(internship__is_active=True) | Q(course__isnull=True, internship__isnull=True)
+    ).order_by('-applied_at')
     
     if status_filter != 'all':
         applications = applications.filter(status=status_filter.upper())
@@ -244,39 +420,75 @@ def my_applications(request):
 
 
 @student_required
+def my_programs(request):
+    """View student's enrolled (approved) programs"""
+    student = request.user
+    
+    # Enrolled means application is APPROVED and program is active
+    enrolled_programs = Application.objects.filter(
+        student=student,
+        status='APPROVED'
+    ).filter(
+        Q(course__is_active=True) | Q(internship__is_active=True)
+    ).select_related('course', 'internship', 'course__institution', 'internship__institution')
+    
+    context = {
+        'enrolled_programs': enrolled_programs,
+    }
+    return render(request, 'student/my_programs.html', context)
+
+
+@student_required
 def my_attendance(request):
     """View student's attendance records with MORNING/EVENING sessions"""
     student = request.user
     
-    # Get approved applications (enrolled programs)
-    approved_applications = Application.objects.filter(student=student, status='APPROVED')
+    # Get approved applications (enrolled programs) that are still active
+    approved_applications = Application.objects.filter(
+        student=student, 
+        status='APPROVED'
+    ).filter(
+        Q(course__is_active=True) | Q(internship__is_active=True)
+    )
     
+    # Get Filter Params
+    filter_date = request.GET.get('date')
+    session_filter = request.GET.get('session')
+
     # Get attendance for each application
     attendance_data = []
     for app in approved_applications:
-        records = Attendance.objects.filter(application=app).order_by('-date', '-session')
+        all_records = Attendance.objects.filter(application=app).order_by('-date', '-session')
         
-        # Use the model method for percentage
+        # Calculate stats from ALL records (unfiltered)
+        total = all_records.count()
+        present = all_records.filter(status='PRESENT').count()
+        late = all_records.filter(status='LATE').count()
+        absent = all_records.filter(status='ABSENT').count()
+        
+        # Calculate session-wise counts (unfiltered)
+        morning_present = all_records.filter(session='MORNING', status__in=['PRESENT', 'LATE']).count()
+        morning_total = all_records.filter(session='MORNING').count()
+        evening_present = all_records.filter(session='EVENING', status__in=['PRESENT', 'LATE']).count()
+        evening_total = all_records.filter(session='EVENING').count()
+
+        # Apply Filters to the records list ONLY
+        filtered_records = all_records
+        if filter_date:
+            filtered_records = filtered_records.filter(date=filter_date)
+        if session_filter and session_filter != 'ALL':
+            filtered_records = filtered_records.filter(session=session_filter)
+        
+        # Use the model method for percentage (uses all records internally usually, but let's be sure)
         percentage = Attendance.get_attendance_percentage(app)
-        
-        # Calculate session-wise counts
-        morning_present = records.filter(session='MORNING', status__in=['PRESENT', 'LATE']).count()
-        morning_total = records.filter(session='MORNING').count()
-        evening_present = records.filter(session='EVENING', status__in=['PRESENT', 'LATE']).count()
-        evening_total = records.filter(session='EVENING').count()
-        
-        total = records.count()
-        present = records.filter(status='PRESENT').count()
-        late = records.filter(status='LATE').count()
-        absent = records.filter(status='ABSENT').count()
         
         # Check certificate eligibility
         eligible_for_certificate = percentage >= 75
         
         attendance_data.append({
             'application': app,
-            'records': records[:20],  # Last 20 records (10 days x 2 sessions)
-            'total': total,
+            'records': filtered_records, # Only the list is filtered
+            'total': total,              # Stats remain overall
             'present': present,
             'late': late,
             'absent': absent,
@@ -290,6 +502,8 @@ def my_attendance(request):
     
     context = {
         'attendance_data': attendance_data,
+        'filter_date': filter_date,
+        'session_filter': session_filter,
     }
     return render(request, 'student/attendance.html', context)
 
@@ -299,19 +513,23 @@ def my_certificates(request):
     """View student's certificates - only for approved enrollments with ≥75% attendance"""
     student = request.user
     
-    # Get certificates through applications
+    # Get certificates through applications that are still active
     certificates = Certificate.objects.filter(
         application__student=student
+    ).filter(
+        Q(application__course__is_active=True) | Q(application__internship__is_active=True)
     ).select_related('application', 'application__course', 'application__internship')
     
-    # Enhance certificates with eligibility info
+    # Enhance certificates with eligibility info using model property
     for cert in certificates:
-        cert.can_download = (cert.status == 'ISSUED' or cert.status == 'APPROVED') and cert.is_eligible
+        cert.can_download_status = cert.can_download
     
-    # Get approved applications that might be eligible for certificate
+    # Get approved applications that might be eligible for certificate (and are still active)
     approved_applications = Application.objects.filter(
         student=student, 
         status='APPROVED'
+    ).filter(
+        Q(course__is_active=True) | Q(internship__is_active=True)
     ).select_related('course', 'internship')
     
     eligible_for_certificate = []
@@ -343,25 +561,27 @@ def download_certificate(request, certificate_id):
         Certificate,
         id=certificate_id,
         application__student=student,
-        status__in=['ISSUED', 'APPROVED']
+        status='ISSUED'
     )
     
     # Generate PDF dynamically
     from certificates.utils import generate_single_certificate
     from certificates.models import CertificateTemplate
     
-    # Try to get a default template
-    template = CertificateTemplate.objects.first()
+    # Try to get the assigned template or a default one
+    template = certificate.template or CertificateTemplate.objects.first()
     if not template:
         # Fallback if no template exists
-        response = HttpResponse(content_type='text/plain')
-        response['Content-Disposition'] = f'attachment; filename="certificate_{certificate.id}.txt"'
-        response.write("Certificate template not found. Please contact administration.")
-        return response
+        return HttpResponse("Certificate template not found. Please contact administration.", content_type='text/plain')
         
     student_name = student.get_full_name() or student.username
     program_name = certificate.application.program_name
-    institution_name = student.institution.name if student.institution else None
+    
+    # Get institution and logo from the program (course or internship)
+    program = certificate.application.course or certificate.application.internship
+    institution = program.institution if program else None
+    institution_name = institution.name if institution else None
+    logo_path = institution.logo.path if institution and institution.logo else None
     
     pdf_buffer = generate_single_certificate(
         student_name,
@@ -370,7 +590,9 @@ def download_certificate(request, certificate_id):
         template.name_y_axis,
         template.font_size,
         course_name=program_name,
-        institution_name=institution_name
+        institution_name=institution_name,
+        logo_path=logo_path,
+        certificate_id=certificate.certificate_number
     )
     
     response = HttpResponse(content_type='application/pdf')

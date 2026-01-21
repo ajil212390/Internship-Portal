@@ -15,10 +15,22 @@ class Internship(models.Model):
         limit_choices_to={'role': 'COORDINATOR'},
         related_name='coordinated_internships'
     )
+    CATEGORY_CHOICES = (
+        ('WEB', 'Web Development'),
+        ('PYTHON', 'Python Programming'),
+        ('DATA', 'Data Science'),
+        ('AI', 'Artificial Intelligence'),
+        ('APP', 'App Development'),
+        ('CYBER', 'Cyber Security'),
+        ('DESIGN', 'UI/UX Design'),
+        ('OTHER', 'Other'),
+    )
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='OTHER')
     duration = models.IntegerField(help_text="Duration in days")
     max_students = models.IntegerField(default=20)
     start_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
+    eligibility = models.TextField(blank=True, null=True, help_text="Eligibility criteria")
     requirements = models.TextField(blank=True, null=True, help_text="Requirements and eligibility")
     skills_gained = models.TextField(blank=True, null=True, help_text="Skills students will gain")
     is_active = models.BooleanField(default=True)

@@ -1,24 +1,30 @@
 {% extends "admin/custom_base.html" %}
-{% block title %}Trainers{% endblock %}
-{% block page_title %}Manage Trainers{% endblock %}
+{% block title %}HR Coordinators{% endblock %}
+{% block page_title %}Manage HR Coordinators{% endblock %}
 
 {% block content %}
 <!-- Page Header -->
 <div class="d-flex justify-between items-center mb-6">
     <div>
-        <p class="text-muted">Manage all academic coordinators and trainers</p>
+        <p class="text-muted">Manage all HR coordinators (responsible for institutional courses)</p>
     </div>
     <a href="{% url 'add_coordinator' %}" class="btn btn-primary">
         <i class="fas fa-plus"></i>
-        Add Coordinator
+        Add HR Coordinator
     </a>
 </div>
 
 <!-- Coordinators Table Card -->
 <div class="card">
     <div class="card-header">
-        <h3 class="card-title">All Coordinators</h3>
+        <h3 class="card-title">All HR Coordinators</h3>
         <div class="d-flex gap-4">
+            <select id="companyFilter" class="form-control" style="width: 200px;">
+                <option value="">All Companies</option>
+                {% for company in companies %}
+                    <option value="{{ company.name }}">{{ company.name }}</option>
+                {% endfor %}
+            </select>
             <div class="search-box" style="width: 220px;">
                 <i class="fas fa-search"></i>
                 <input type="text" placeholder="Search coordinators..." id="searchInput">
@@ -33,7 +39,7 @@
                         <th>Coordinator</th>
                         <th>Email</th>
                         <th>Phone</th>
-                        <th>Institution</th>
+                        <th>Company</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -48,7 +54,7 @@
                                 </div>
                                 <div>
                                     <div class="font-semibold">{{ c.username }}</div>
-                                    <div class="text-muted" style="font-size: 0.75rem;">Coordinator</div>
+                                    <div class="text-muted" style="font-size: 0.75rem;">HR Coordinator</div>
                                 </div>
                             </div>
                         </td>
@@ -68,7 +74,7 @@
                                 <span class="text-muted">--</span>
                             {% endif %}
                         </td>
-                        <td>
+                        <td class="company-cell" data-company="{{ c.institution.name|default:'' }}">
                             {% if c.institution %}
                                 <span class="d-flex items-center gap-2">
                                     <i class="fas fa-building text-muted"></i>
@@ -125,13 +131,27 @@
 
 {% block extra_js %}
 <script>
-    document.getElementById('searchInput').addEventListener('keyup', function() {
-        const filter = this.value.toLowerCase();
-        const rows = document.querySelectorAll('#coordinatorsTable tbody tr');
+    const searchInput = document.getElementById('searchInput');
+    const companyFilter = document.getElementById('companyFilter');
+    const rows = document.querySelectorAll('#coordinatorsTable tbody tr');
+    
+    function filterTable() {
+        const searchText = searchInput.value.toLowerCase();
+        const selectedCompany = companyFilter.value;
+        
         rows.forEach(row => {
             const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(filter) ? '' : 'none';
+            const companyCell = row.querySelector('.company-cell');
+            const companyName = companyCell ? companyCell.dataset.company : '';
+            
+            const matchesSearch = text.includes(searchText);
+            const matchesCompany = !selectedCompany || companyName === selectedCompany;
+            
+            row.style.display = (matchesSearch && matchesCompany) ? '' : 'none';
         });
-    });
+    }
+    
+    searchInput.addEventListener('keyup', filterTable);
+    companyFilter.addEventListener('change', filterTable);
 </script>
 {% endblock %}
