@@ -78,8 +78,22 @@
                                                 <i class="fas fa-certificate"></i> {{ app.certificate.status|title }}
                                             </span>
                                         {% else %}
-                                            <span class="badge badge-neutral" style="font-size: 0.65rem; padding: 1px 4px;">
-                                                Enrolled
+                                            <span class="badge 
+                                                {% if app.status == 'APPROVED' %}badge-success
+                                                {% elif app.status == 'PENDING' %}badge-warning
+                                                {% elif app.status == 'REJECTED' %}badge-error
+                                                {% else %}badge-neutral{% endif %}" 
+                                                style="font-size: 0.65rem; padding: 1px 4px;"
+                                                title="{{ app.program_name }}">
+                                                {% if app.status == 'APPROVED' %}
+                                                    <i class="fas fa-check-circle"></i> Enrolled
+                                                {% elif app.status == 'PENDING' %}
+                                                    <i class="fas fa-clock"></i> Pending
+                                                {% elif app.status == 'REJECTED' %}
+                                                    <i class="fas fa-times-circle"></i> Rejected
+                                                {% else %}
+                                                    {{ app.status|title }}
+                                                {% endif %}
                                             </span>
                                         {% endif %}
                                     {% endfor %}
